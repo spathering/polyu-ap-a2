@@ -3,43 +3,78 @@
 # dependencies = ["requests"]
 # ///
 
-"""
-Fetch the numbers once, save the raw reply to data/, and never fetch again.
+"""Fetch 2026 Hong Kong daily temperature and rainfall source data.
+
+The source is the Hong Kong Observatory. Each response is stored byte-for-byte
+under data/raw/. Existing files are never fetched again.
 
     uv run fetch.py
 
-Change URL and FILE. The default is the Hong Kong Observatory's daily mean
-temperature for 2026, so the template runs before you have touched it and you
-can see what a file looks like when it arrives. It is an example, not your
-phenomenon: handing it in unchanged is handing in nothing.
+Annual files let audit.py compare completed months before one period is chosen.
 """
 
 from pathlib import Path
 
 import requests
 
-URL = ("https://data.weather.gov.hk/weatherAPI/opendata/opendata.php"
-       "?dataType=CLMTEMP&rformat=csv&station=HKO&year=2026")      # CHANGE ME
-FILE = "hko-daily-mean-temperature-2026.csv"                          # CHANGE ME: say what it is,
-                                                                      # keep the publisher's extension
+from dataset_config import SOURCE_STATIONS, YEAR
+
 HERE = Path(__file__).parent
-DATA = HERE / "data"
+RAW = HERE / "data" / "raw"
+TEMPERATURE = RAW / "temperature"
+RAINFALL = RAW / "rainfall"
+STATION_PAGE = RAW / "hko-weather-stations.html"
+
+TEMPERATURE_URL = "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php"
+RAINFALL_URL = (
+    "https://data.weather.gov.hk/weatherAPI/cis/csvfile/"
+    "{station}/{year}/daily_{station}_RF_{year}.csv"
+)
+STATION_URL = "https://www.weather.gov.hk/en/cis/stn.htm"
+
+HEADERS = {"User-Agent": "SD5913 PolyU assignment 2 data visualisation"}
 
 
-def fetch(url, path):
-    """Ask for the file once. If it is already in data/, do nothing."""
-    if path.exists():
-        print(f"data/{path.name} is already here ({path.stat().st_size // 1024} KB). "
-              "Delete it to fetch again.")
+def fetch_once(session, url, path, params=None):
+    """Save one raw HTTP response unless it is already present."""
+    if path.is_file():
+        print(f"keep  {path.relative_to(HERE)} ({path.stat().st_size} bytes)")
         return path
-    DATA.mkdir(exist_ok=True)
-    print(f"asking {url}")
-    reply = requests.get(url, timeout=60, headers={"User-Agent": "SD5913 PolyU student"})
-    reply.raise_for_status()
-    path.write_bytes(reply.content)      # the raw reply, byte for byte: what arrived is what gets committed
-    print(f"saved data/{path.name} ({path.stat().st_size // 1024} KB). Now: git add data")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    response = session.get(url, params=params, timeout=60, headers=HEADERS)
+    response.raise_for_status()
+    path.write_bytes(response.content)
+    print(f"saved {path.relative_to(HERE)} ({path.stat().st_size} bytes)")
     return path
 
 
+def main():
+    with requests.Session() as session:
+        fetch_once(session, STATION_URL, STATION_PAGE)
+
+        for station, name in SOURCE_STATIONS.items():
+            print(f"\n{station} — {name}")
+            fetch_once(
+                session,
+                TEMPERATURE_URL,
+                TEMPERATURE / f"daily-mean-temperature-{station}-{YEAR}.csv",
+                params={
+                    "dataType": "CLMTEMP",
+                    "station": station,
+                    "year": YEAR,
+                    "rformat": "csv",
+                },
+            )
+            fetch_once(
+                session,
+                RAINFALL_URL.format(station=station, year=YEAR),
+                RAINFALL / f"daily-total-rainfall-{station}-{YEAR}.csv",
+            )
+
+    print(f"\n{len(SOURCE_STATIONS)} candidate station pairs fetched once. "
+          "Now run: uv run audit.py --months")
+
+
 if __name__ == "__main__":
-    fetch(URL, DATA / FILE)
+    main()
