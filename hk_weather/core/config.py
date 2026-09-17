@@ -3,9 +3,6 @@
 YEAR = 2026
 MONTH = 4
 
-# Candidate stations publish both variables at the same named HKO station.
-# Kai Tak and Tsing Yi were excluded before acquisition because their temperature
-# and rainfall instruments use different station sites/codes.
 SOURCE_STATIONS = {
     "CCH": "Cheung Chau",
     "HKA": "Hong Kong International Airport",
@@ -32,9 +29,6 @@ SOURCE_STATIONS = {
     "WLP": "Wetland Park",
 }
 
-# April is the most complete finished month of 2026 through August. These two
-# stations contain HKO '#' (incomplete) observations during April, so they are
-# excluded from the final, strictly complete 21-station dataset.
 EXCLUDED_STATIONS = {
     "SKW": "rainfall incomplete on 2026-04-11 and 2026-04-12",
     "WLP": "temperature incomplete on 2026-04-08",
