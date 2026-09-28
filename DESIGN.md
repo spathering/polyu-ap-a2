@@ -14,7 +14,7 @@ The main visual statement is that Hong Kong's temperature forms a broad, slowly 
 
 The scene uses Y as its only height axis. Projected easting becomes X, projected northing becomes Z, and every base-map vertex has `Y = 0`. Station longitude and latitude therefore remain aligned across the base, temperature surface and rainfall surface.
 
-Temperature uses one fixed 14–28 °C scale for the whole month. Its height direction is reversed within the lower half of the scene: 28 °C meets the reference grid and lower temperatures extend farther into negative Y. Rainfall uses a 0 mm baseline on the grid and larger totals rise higher. Alpha approaches zero near the independent 14 °C temperature fade baseline and 0 mm rainfall baseline. Temperature uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
+Temperature uses one fixed 14–28 °C scale for the whole month. Its height direction is reversed within the lower half of the scene: 28 °C meets the reference grid and lower temperatures extend farther into negative Y. Rainfall uses a 0 mm baseline on the grid and larger totals rise higher. Both surfaces use their mapped distance from `Y=0` as the transparency rule: alpha approaches zero at the grid and increases smoothly away from it. Temperature uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
 
 Rainfall uses one fixed 0–67 mm scale. Zero rain meets the reference grid; increasing rain rises farther above it. The upper surface uses a pale-cyan-to-deep-blue scale. The two height conversions are linear but independent because °C and mm are different units. Legends always show the original units rather than suggesting that scene height is physical altitude.
 

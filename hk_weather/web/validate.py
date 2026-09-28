@@ -67,8 +67,8 @@ def validate_site(site=SITE):
         atol=2e-3,
     ):
         raise RuntimeError("web rainfall height direction is invalid")
-    if manifest["temperature"]["baseline"] != 14.0:
-        raise RuntimeError("temperature baseline is not 14 °C")
+    if manifest["temperature"]["baseline"] != 28.0:
+        raise RuntimeError("temperature opacity does not fade at Y=0 / 28 °C")
     if manifest["rainfall"]["baseline"] != 0.0:
         raise RuntimeError("rainfall baseline is not 0 mm")
     if manifest["camera"]["pitchRange"] != [-60.0, 60.0]:

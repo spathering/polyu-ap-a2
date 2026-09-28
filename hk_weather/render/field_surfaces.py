@@ -9,7 +9,7 @@ from hk_weather.core.config import (
     RAINFALL_FADE_WIDTH_MM,
     RAINFALL_OPACITY,
     RAINFALL_RANGE_MM,
-    TEMPERATURE_BASELINE_C,
+    TEMPERATURE_FADE_BASELINE_C,
     TEMPERATURE_COLOURS,
     TEMPERATURE_FADE_WIDTH_C,
     TEMPERATURE_OPACITY,
@@ -61,7 +61,7 @@ def add_field_surfaces(plotter, prepared):
     temperature_lut = _fading_lookup_table(
         TEMPERATURE_COLOURS,
         TEMPERATURE_RANGE_C,
-        TEMPERATURE_BASELINE_C,
+        TEMPERATURE_FADE_BASELINE_C,
         TEMPERATURE_FADE_WIDTH_C,
         TEMPERATURE_OPACITY,
     )

@@ -73,13 +73,13 @@ temperature_y = -Ht × (28 - T) / (28 - 14)
 rainfall_y    =  Hr × R / 67
 ```
 
-`Ht` and `Hr` are fractions of the horizontal map span. Both conversions are fixed for the whole month and have inverse functions for legends and tests. The 14 °C temperature value remains the opacity-fade baseline but is no longer the zero-height anchor; 28 °C maps to `Y=0`.
+`Ht` and `Hr` are fractions of the horizontal map span. Both conversions are fixed for the whole month and have inverse functions for legends and tests. Temperature 28 °C and rainfall 0 mm map to `Y=0`; these zero-height anchors are also the opacity-fade anchors.
 
 All 30 temperature fields and 30 rainfall fields are computed once at startup. A `FieldFrames` model stores source-unit fields and mapped Y arrays. Runtime changes never recalculate spatial distances or IDW. `FrameController.apply(position)` linearly blends the two neighbouring prepared daily frames, replaces the meshes' Y columns and scalars, updates station links, date/time and hover text, and requests one render.
 
 ## Rendering and interaction
 
-The base map is translucent but geographically clear. The upper rainfall surface uses a cyan-to-deep-blue scale; the lower temperature surface uses a purple-to-orange-to-yellow scale. Lookup-table alpha follows a smoothstep curve from zero at the 14 °C and 0 mm fade baselines to each surface's maximum opacity. Depth peeling is enabled when supported. A fragment-shader replacement computes screen-space fog from `gl_FragCoord.z` and blends distant fragments toward the background.
+The base map is translucent but geographically clear. The upper rainfall surface uses a cyan-to-deep-blue scale; the lower temperature surface uses a purple-to-orange-to-yellow scale. Lookup-table alpha follows a smoothstep curve from zero at each surface's `Y=0` value—28 °C and 0 mm—to its maximum opacity away from the grid. Depth peeling is enabled when supported. A fragment-shader replacement computes screen-space fog from `gl_FragCoord.z` and blends distant fragments toward the background.
 
 Each station owns a three-point vertical link:
 

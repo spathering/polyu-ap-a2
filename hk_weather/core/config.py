@@ -50,7 +50,8 @@ LAND_THRESHOLD_M = 2.0
 # Fixed ranges make dates directly comparable.
 TEMPERATURE_RANGE_C = (14.0, 28.0)
 RAINFALL_RANGE_MM = (0.0, 67.0)
-TEMPERATURE_BASELINE_C = 14.0
+# The temperature surface meets Y=0 at the upper range, so fade there too.
+TEMPERATURE_FADE_BASELINE_C = 28.0
 RAINFALL_BASELINE_MM = 0.0
 TEMPERATURE_FADE_WIDTH_C = 3.5
 RAINFALL_FADE_WIDTH_MM = 8.0

@@ -4,11 +4,11 @@ This plan replaced the elevation-and-columns renderer without changing the valid
 
 **Implementation status (24 September 2026):** stages 1–10 are complete locally. The Python screenshot and interaction, tuned dual surfaces, static payload, VTK.js viewer, production build, artifact validation and Pages workflow have all been tested. Remote publication is the only repository-owner step remaining: enable **Settings → Pages → GitHub Actions**, commit this work and push it to `main`.
 
-**Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; the surfaces fade near 14 °C/0 mm; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
+**Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; the surfaces fade as they approach `Y=0`; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
 
 **Direction and layout amendment (28 September 2026):** rainfall now rises from `Y=0`, temperature extends below it, and increasing rainfall always maps to greater positive height. The visible sea rectangle has been replaced by a 24-division grid with a major line every fourth interval and radial edge fade. Pitch now spans -60° to +60°. Autoplay no longer discards slow timer frames, and the web settings and legends share one non-overlapping layout rail.
 
-**Temperature-direction amendment (28 September 2026):** the lower temperature mapping is reversed: 28 °C meets `Y=0`, and decreasing temperature produces progressively smaller negative Y. The 14 °C value remains the transparency fade baseline only.
+**Temperature-direction amendment (28 September 2026):** the lower temperature mapping is reversed: 28 °C meets `Y=0`, and decreasing temperature produces progressively smaller negative Y. Transparency now also fades at that zero plane rather than at a separate temperature value.
 
 ## 1. Preserve the baseline
 

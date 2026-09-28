@@ -29,7 +29,7 @@ from hk_weather.core.config import (
     SEA_COLOUR,
     SEA_OPACITY,
     TEMPERATURE_COLOURS,
-    TEMPERATURE_BASELINE_C,
+    TEMPERATURE_FADE_BASELINE_C,
     TEMPERATURE_FADE_WIDTH_C,
     TEMPERATURE_OPACITY,
     TEMPERATURE_RANGE_C,
@@ -133,7 +133,7 @@ def export_web_data(weather, prepared, directory=WEB_DATA_STAGING):
         "files": files,
         "temperature": {
             "range": list(TEMPERATURE_RANGE_C),
-            "baseline": TEMPERATURE_BASELINE_C,
+            "baseline": TEMPERATURE_FADE_BASELINE_C,
             "fadeWidth": TEMPERATURE_FADE_WIDTH_C,
             "colours": TEMPERATURE_COLOURS,
             "yFile": "temperature-y.f32",
