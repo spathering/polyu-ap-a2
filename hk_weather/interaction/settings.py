@@ -23,6 +23,20 @@ class SettingsPanel:
             color_off="#42545a",
             background_color="#07151b",
         )
+        self.speed_widget = plotter.add_slider_widget(
+            self.timeline.set_speed,
+            rng=(0.25, 3.0),
+            value=1.0,
+            title="PLAYBACK SPEED",
+            pointa=(0.03, 0.68),
+            pointb=(0.18, 0.68),
+            style="modern",
+            interaction_event="always",
+            tube_width=0.006,
+            slider_width=0.018,
+            title_height=0.016,
+            fmt="%0.2fx",
+        )
         self.toggle_label = plotter.add_text(
             "SETTINGS",
             position=(70, height - 127),
@@ -46,4 +60,5 @@ class SettingsPanel:
         """Keep the settings tab visible while toggling its contents."""
         self.autoplay_widget.SetEnabled(bool(visible))
         self.autoplay_label.SetVisibility(bool(visible))
+        self.speed_widget.SetEnabled(bool(visible))
         self.plotter.render()

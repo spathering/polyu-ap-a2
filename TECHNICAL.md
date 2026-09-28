@@ -75,7 +75,7 @@ rainfall_y    =  Hr × R / 67
 
 `Ht` and `Hr` are fractions of the horizontal map span. Both conversions are fixed for the whole month and have inverse functions for legends and tests. Temperature 28 °C and rainfall 0 mm map to `Y=0`; these zero-height anchors are also the opacity-fade anchors.
 
-All 30 temperature fields and 30 rainfall fields are computed once at startup. A `FieldFrames` model stores source-unit fields and mapped Y arrays. Runtime changes never recalculate spatial distances or IDW. `FrameController.apply(position)` linearly blends the two neighbouring prepared daily frames, replaces the meshes' Y columns and scalars, updates station links, date/time and hover text, and requests one render.
+All 30 temperature fields and 30 rainfall fields are computed once at startup. A `FieldFrames` model stores source-unit fields and mapped Y arrays. Runtime changes never recalculate spatial distances or IDW. `FrameController.apply(position)` linearly blends the two neighbouring prepared daily frames, replaces the meshes' Y columns and scalars, updates station links, date-only labels, station aggregates and hover text, and requests one render. The aggregate rainfall is the sum across the 21 station series; aggregate temperature is their arithmetic mean.
 
 ## Rendering and interaction
 
@@ -89,7 +89,7 @@ Each station owns a three-point vertical link:
 
 The upper and lower endpoints show where the actual observations constrain each surface. Hover picking targets land plus an invisible zero-plane water mesh. The picked point is compared with station X–Z positions, and one reusable highlight updates the link and both endpoints.
 
-The slider and timer both call the same frame controller with floating positions. A collapsible settings panel controls whether automatic playback advances; timer deltas are capped instead of discarded so a slow frame cannot stall playback. Camera maths uses `view_up = (0, 1, 0)`: pitch is clamped to -60–60 degrees while azimuth remains unrestricted. No module may assume that Z is vertical.
+The slider and timer both call the same frame controller with floating positions. A collapsible settings panel controls whether automatic playback advances and supplies a `0.25×–3×` multiplier; the timer remains the sole clock and multiplies its normalised delta rather than creating another playback path. Timer deltas are capped instead of discarded so a slow frame cannot stall playback. A separate default-collapsed information panel owns the user-facing source and interpolation explanation. Camera maths uses `view_up = (0, 1, 0)`: pitch is clamped to -60–60 degrees while azimuth remains unrestricted. No module may assume that Z is vertical.
 
 ## Reuse and replacement
 
@@ -128,7 +128,7 @@ site/                    ignored build output
 
 The payload uses one shared X–Z topology, Float32 arrays for 30 temperature and rainfall frames, and JSON metadata for dates, stations, colours, scales and camera rules. `manifest.json` records schema version, shapes, byte order, file size and SHA-256. `build_site.py` writes ignored staging files to `web/public/data/`; Vite copies them into `site/data/`, so generated binary data is not committed and is not erased by the frontend build. This prevents the desktop and website from silently diverging. The initial target is a complete Pages artifact below 20 MB and first-load data below 10 MB, comfortably inside the documented [GitHub Pages limits](https://docs.github.com/en/enterprise-cloud@latest/pages/getting-started-with-github-pages/github-pages-limits).
 
-The web viewer reproduces the continuous timeline, collapsible autoplay setting, Y-up camera, 360-degree azimuth, -60–60 degree pitch, invisible zero-plane picking, nearest-station text, linked endpoint highlight, value-dependent alpha, a radial-fading major/minor grid and screen-depth fog. It uses local bundled dependencies rather than a CDN. Vite is configured with `base: "./"`, and every data request is relative, because a project site is served below `/polyu-ap-a2/` rather than the account root.
+The web viewer reproduces the continuous timeline, date/aggregate summary, collapsible autoplay and speed settings, default-collapsed data/method panel, Y-up camera, 360-degree azimuth, -60–60 degree pitch, invisible zero-plane picking, nearest-station text, linked endpoint highlight, value-dependent alpha, a radial-fading major/minor grid and screen-depth fog. It uses local bundled dependencies rather than a CDN. Vite is configured with `base: "./"`, and every data request is relative, because a project site is served below `/polyu-ap-a2/` rather than the account root.
 
 ## Pages workflow
 
@@ -158,10 +158,10 @@ uv run validate_site.py
 uv run python -m http.server 8000 --directory site
 ```
 
-Validation checks the schema and checksums, 30 dates, 21 stations, topology size, exact station values, swapped Y signs, grid metadata, artifact size, relative asset paths and absence of CDN dependencies or local absolute paths. Manual browser review covers Chrome, Edge and Firefox, the `/polyu-ap-a2/` project path, autoplay, timeline dragging, picking, camera limits, resize and touch fallback. The deployed Pages URL will be added to README only after the workflow succeeds.
+Validation checks the schema and checksums, 30 dates, 21 stations, topology size, exact station values, swapped Y signs, grid metadata, artifact size, relative asset paths and absence of CDN dependencies or local absolute paths. Manual browser review covers the `/polyu-ap-a2/` project path, autoplay and speed changes, timeline dragging, both collapsible panels, picking, camera limits, resize and touch fallback. The deployed URL is [https://spathering.github.io/polyu-ap-a2/](https://spathering.github.io/polyu-ap-a2/).
 
 ## Verification
 
 Automated checks verify 30 dates, 21 stations and 630 unique rows; a flat fading grid; non-positive temperature Y; non-negative rainfall Y; exact station hits; finite, non-negative interpolation weights; no negative rain; identical surface topology; fixed scales; equivalent timer and slider state; Y-up camera clamping; and successful off-screen output.
 
-Manual review checks that all three layers remain readable, 24 April produces local rainfall peaks rather than columns, baseline areas fade cleanly, the settings panel collapses, autoplay stops and restarts from its checkbox, fractional dates interpolate, hover highlights both station endpoints, depth fog changes with screen depth, and `uv run plot.py` still works without network access. The Pages build must reproduce the same mappings and interactions without a Python server.
+Manual review checks that all three layers remain readable, 24 April produces local rainfall peaks rather than columns, baseline areas fade cleanly, both information panels collapse, autoplay stops and restarts from its checkbox, playback speed changes the same clock, fractional dates interpolate without displaying hours, hover highlights both station endpoints, depth fog changes with screen depth, and `uv run plot.py` still works without network access. The Pages build must reproduce the same mappings and interactions without a Python server.

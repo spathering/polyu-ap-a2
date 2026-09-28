@@ -30,7 +30,9 @@ The power and neighbour count are not chosen only by appearance. Candidate setti
 
 ## Interaction
 
-The main control is a floating continuous timeline. The scene starts at 1 April, advances one data-day in about 900 ms and loops after 30 April. Geometry, scalar colours, station links and tooltip values are linearly interpolated between consecutive daily records; the time label includes hours and minutes so estimated in-between states cannot be mistaken for new observations. A small collapsible floating settings panel exposes automatic playback, enabled by default.
+The main control is a floating continuous timeline. The scene starts at 1 April, advances one data-day in about 900 ms at `1×`, and loops after 30 April. Geometry, scalar colours, station links and tooltip values are linearly interpolated between consecutive daily records, but the display never invents an hourly timestamp. Its summary contains only the date, the sum of the 21 current station rainfall totals, and the arithmetic mean of the same stations' temperatures.
+
+A small collapsible floating settings panel exposes automatic playback, enabled by default, and a `0.25×–3×` playback-speed slider. A separate floating **Data & method** panel is collapsed by default. It links the observation and boundary sources, defines the two timeline aggregates, states the chosen IDW parameters, and explains that values between stations and dates are estimates rather than hourly observations.
 
 The camera can rotate through a full 360 degrees around the Y axis, zoom with the mouse wheel, and change pitch between -60 and +60 degrees. The initial view is 28 degrees so the upper rainfall surface, middle grid and lower temperature surface can all be read together. Screen-space depth fog uses fragment depth to blend distant geometry toward the background, strengthening depth without encoding another measurement.
 
@@ -50,4 +52,6 @@ The surfaces estimate conditions between a limited number of stations. They do n
 - Both surfaces hit every station's value for every date.
 - All dates use fixed height and colour scales.
 - The upper surface, base map and lower surface remain legible in the 24 April still.
-- Autoplay toggle, continuous timeline, 360-degree rotation, -60–60 degree pitch and nearest-station highlight all remain available.
+- The timeline shows date, 21-station rainfall total and 21-station mean temperature without an hourly label.
+- Autoplay toggle, `0.25×–3×` speed control, continuous timeline, 360-degree rotation, -60–60 degree pitch and nearest-station highlight all remain available.
+- A separate source/interpolation panel is present and collapsed by default.

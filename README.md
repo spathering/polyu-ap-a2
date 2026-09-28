@@ -10,7 +10,7 @@ Hong Kong is geographically small, but its daily weather is not uniform. This pr
 
 Hong Kong sits on a fading two-scale reference grid at `Y=0`; major and minor lines become transparent away from the centre. Rainfall forms a continuous surface above it: larger totals rise higher and become darker blue. Temperature forms a second surface below it and changes from purple through orange to yellow. White links show where each measured station constrains the two estimated surfaces.
 
-The scene advances smoothly through all 30 days, linearly interpolating the already spatially interpolated fields between consecutive daily records. A floating draggable timeline accepts continuous positions. A collapsible settings panel contains an automatic-playback checkbox; when selected, the timeline moves automatically. The camera supports 360-degree rotation, zoom, and pitch from -60° below the grid to +60° above it. Moving the pointer over the map shows the nearest station's interpolated date/time, mean temperature and total rainfall, while highlighting both measured endpoints.
+The scene advances smoothly through all 30 days, linearly interpolating the already spatially interpolated fields between consecutive daily records. A floating draggable timeline shows only the date, the summed rainfall across the 21 displayed stations, and their mean temperature—never a fabricated hourly timestamp. A collapsible settings panel controls automatic playback and its `0.25×–3×` speed. A second, initially collapsed panel explains the sources and interpolation method in the visualisation itself. The camera supports 360-degree rotation, zoom, and pitch from -60° below the grid to +60° above it. Moving the pointer over the map shows the nearest station's interpolated date, mean temperature and total rainfall, while highlighting both measured endpoints.
 
 ## Data and method
 
@@ -20,7 +20,7 @@ April was selected after auditing every completed month from January to August 2
 
 Both surfaces share one 18,088-node horizontal topology containing exact station nodes. Temperature uses exact k-nearest inverse-distance weighting (IDW) on Celsius values. Rainfall uses local IDW after a `log1p` transform and is converted back to millimetres. Leave-one-station-out validation selected `power=1.5, k=20` for temperature and `power=2.5, k=8` for rainfall. Fixed month-wide ranges—14–28 °C and 0–67 mm—make dates comparable. Rainfall starts at `Y=0` for 0 mm and rises with rainfall; temperature starts at `Y=0` for 28 °C and descends as temperature becomes lower. For both surfaces, alpha approaches zero as geometry approaches `Y=0`. A fragment-depth shader blends distant screen-space fragments into the background to add depth fog.
 
-The coloured shapes between stations are estimates, not additional measurements. Daily means hide within-day temperature changes, daily totals hide the timing of rain, and surface height is an explanatory visual scale rather than physical altitude. Areas outside the supported Hong Kong land domain are not extrapolated.
+The coloured shapes between stations are estimates, not additional measurements. The timeline's Hong Kong rainfall total sums the 21 displayed station totals; it is a comparison statistic, not an areal rainfall volume. Daily means hide within-day temperature changes, daily totals hide the timing of rain, and surface height is an explanatory visual scale rather than physical altitude. Areas outside the supported Hong Kong land domain are not extrapolated.
 
 ## Run the Python version
 

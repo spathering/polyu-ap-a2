@@ -25,6 +25,24 @@
             <span>Automatic playback</span>
             <input id="autoplay" type="checkbox" checked />
           </label>
+          <label class="setting-row speed-row" for="playback-speed">
+            <span>Playback speed <output id="playback-speed-value">1×</output></span>
+            <input id="playback-speed" type="range" min="0.25" max="3" step="0.25" value="1" />
+          </label>
+        </details>
+        <details id="information" class="info-panel">
+          <summary>Data &amp; method</summary>
+          <div class="info-content">
+            <p><strong>Data.</strong> Daily station observations for April 2026 come from the Hong Kong Observatory:</p>
+            <ul>
+              <li><a href="https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-temperature-info-hko">daily mean temperature</a></li>
+              <li><a href="https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-total-rainfall">daily total rainfall</a></li>
+              <li><a href="https://www.weather.gov.hk/en/cis/stn.htm">station locations</a></li>
+            </ul>
+            <p>The land mask uses the official <a href="https://www.had.gov.hk/en/public_services/public_data/">18-district boundary</a>. The timeline's Hong Kong rainfall total sums the 21 displayed station totals; mean temperature averages the same stations.</p>
+            <p><strong>Interpolation.</strong> Temperature uses exact k-nearest IDW (<i>p</i> = 1.5, <i>k</i> = 20). Rainfall uses exact local IDW after a <code>log1p</code> transform (<i>p</i> = 2.5, <i>k</i> = 8). Parameters were selected by leave-one-station-out validation.</p>
+            <p>Only the 30 daily station records are observations. Values between stations and between dates are estimates; the smooth timeline does not represent measured hourly data.</p>
+          </div>
         </details>
         <aside class="legend legend-rainfall" aria-label="Rainfall legend">
           <span>Rainfall · baseline 0 mm</span>
@@ -40,7 +58,8 @@
       <div id="tooltip" class="tooltip" hidden></div>
       <section class="timeline-shell" aria-label="Date control">
         <input id="timeline" type="range" min="0" max="29" step="0.01" value="0" />
-        <div class="timeline-labels"><span>APR 01</span><strong id="timeline-date">01 APR 2026</strong><span>APR 30</span></div>
+        <strong id="timeline-summary" class="timeline-summary">Loading daily summary…</strong>
+        <div class="timeline-labels"><span>APR 01</span><span>APR 30</span></div>
       </section>
       <footer>
         Reference grid Y = 0 · daily fields and in-between times are estimates

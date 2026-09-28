@@ -11,6 +11,7 @@ class TimelinePlayer:
         self.widget = None
         self.dragging = False
         self.autoplay = True
+        self.speed = 1.0
         self.play_position = 0.0
         self.resume_at = 0.0
         self.last_tick = time.monotonic()
@@ -21,6 +22,10 @@ class TimelinePlayer:
 
     def set_autoplay(self, enabled):
         self.autoplay = bool(enabled)
+        self.last_tick = time.monotonic()
+
+    def set_speed(self, value):
+        self.speed = float(value)
         self.last_tick = time.monotonic()
 
     def drag_started(self, _widget, _event):
@@ -39,7 +44,7 @@ class TimelinePlayer:
             return
         # A long render frame must not silently stall playback.
         elapsed = min(elapsed, 0.25)
-        self.play_position += elapsed / AUTOPLAY_INTERVAL_S
+        self.play_position += elapsed * self.speed / AUTOPLAY_INTERVAL_S
         count = len(self.controller.weather.dates)
         if self.play_position >= count:
             self.play_position %= count

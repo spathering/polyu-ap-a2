@@ -14,9 +14,11 @@ const app = document.querySelector('#app');
 const container = document.querySelector('#viewer');
 const slider = document.querySelector('#timeline');
 const dateLabel = document.querySelector('#date-label');
-const timelineDate = document.querySelector('#timeline-date');
+const timelineSummary = document.querySelector('#timeline-summary');
 const tooltip = document.querySelector('#tooltip');
 const autoplayToggle = document.querySelector('#autoplay');
+const playbackSpeed = document.querySelector('#playback-speed');
+const playbackSpeedValue = document.querySelector('#playback-speed-value');
 const loading = document.querySelector('#loading');
 const errorBox = document.querySelector('#error');
 
@@ -462,13 +464,35 @@ async function start() {
     return first * (1 - blend.fraction) + second * blend.fraction;
   }
 
-  function formatPosition(position) {
+  function formatDate(position) {
     const moment = new Date(`${manifest.dates[0]}T00:00:00Z`);
     moment.setTime(moment.getTime() + position * 86400000);
     return new Intl.DateTimeFormat('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
-    }).format(moment).replace(',', ' ·').toUpperCase();
+      timeZone: 'UTC',
+    }).format(moment).toUpperCase();
+  }
+
+  function stationSummary(position) {
+    const blend = frameBlend(position);
+    let rainfallTotal = 0;
+    let temperatureTotal = 0;
+    stations.forEach((station) => {
+      rainfallTotal += station.rainfall[blend.lower] * (1 - blend.fraction)
+        + station.rainfall[blend.upper] * blend.fraction;
+      temperatureTotal += station.temperature[blend.lower] * (1 - blend.fraction)
+        + station.temperature[blend.upper] * blend.fraction;
+    });
+    return {
+      rainfallTotal,
+      meanTemperature: temperatureTotal / stations.length,
+    };
+  }
+
+  function formatTimelineSummary(position) {
+    const summary = stationSummary(position);
+    return `${formatDate(position)} · HK TOTAL RAINFALL ${summary.rainfallTotal.toFixed(1)} MM`
+      + ` · HK MEAN TEMP ${summary.meanTemperature.toFixed(1)} °C`;
   }
 
   function updateStations(position) {
@@ -546,7 +570,7 @@ async function start() {
     const rain = isExactTrace
       ? 'Trace (&lt;0.05 mm)'
       : `${rainfall.toFixed(1)} mm`;
-    return `<strong>${station.name} (${station.code})</strong><br>${formatPosition(state.position)}`
+    return `<strong>${station.name} (${station.code})</strong><br>${formatDate(state.position)}`
       + `<br>Mean temperature&nbsp; ${temperature.toFixed(1)} °C`
       + `<br>Total rainfall&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${rain}`;
   }
@@ -560,9 +584,8 @@ async function start() {
     updateStations(state.position);
     updateHighlight();
     slider.value = String(state.position);
-    const label = formatPosition(state.position);
-    dateLabel.textContent = label;
-    timelineDate.textContent = label;
+    dateLabel.textContent = formatDate(state.position);
+    timelineSummary.textContent = formatTimelineSummary(state.position);
     if (state.selectedStation !== null) tooltip.innerHTML = tooltipHtml(state.selectedStation);
     renderer.resetCameraClippingRange();
     renderWindow.render();
@@ -580,6 +603,11 @@ async function start() {
   });
   slider.addEventListener('change', () => { state.scrubbing = false; });
   autoplayToggle.addEventListener('change', () => {
+    state.lastAnimationAt = performance.now();
+  });
+  playbackSpeed.addEventListener('input', () => {
+    const speed = Number(playbackSpeed.value);
+    playbackSpeedValue.value = `${Number.isInteger(speed) ? speed.toFixed(0) : speed.toFixed(2)}×`;
     state.lastAnimationAt = performance.now();
   });
 
@@ -678,7 +706,7 @@ async function start() {
     const elapsed = Math.min(timestamp - state.lastAnimationAt, manifest.timeline.intervalMs);
     state.lastAnimationAt = timestamp;
     if (autoplayToggle.checked && !state.scrubbing) {
-      state.playPosition += elapsed / manifest.timeline.intervalMs;
+      state.playPosition += (elapsed / manifest.timeline.intervalMs) * Number(playbackSpeed.value);
       if (state.playPosition >= manifest.dates.length) {
         state.playPosition %= manifest.dates.length;
       }

@@ -22,6 +22,9 @@ def validate_site(site=SITE):
     html = index.read_text(encoding="utf-8")
     if 'src="/' in html or 'href="/' in html:
         raise RuntimeError("site contains root-relative asset URLs")
+    required_controls = ("timeline-summary", "playback-speed", "information")
+    if any(f'id="{control}"' not in html for control in required_controls):
+        raise RuntimeError("site is missing timeline summary, speed or information UI")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest["schemaVersion"] != WEB_SCHEMA_VERSION:

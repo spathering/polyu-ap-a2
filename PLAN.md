@@ -2,13 +2,15 @@
 
 This plan replaced the elevation-and-columns renderer without changing the validated April 2026 weather dataset.
 
-**Implementation status (24 September 2026):** stages 1–10 are complete locally. The Python screenshot and interaction, tuned dual surfaces, static payload, VTK.js viewer, production build, artifact validation and Pages workflow have all been tested. Remote publication is the only repository-owner step remaining: enable **Settings → Pages → GitHub Actions**, commit this work and push it to `main`.
+**Implementation status (28 September 2026):** stages 1–10 are complete and the static viewer is published at [https://spathering.github.io/polyu-ap-a2/](https://spathering.github.io/polyu-ap-a2/). The Python screenshot and interaction, tuned dual surfaces, static payload, VTK.js viewer, production build, artifact validation and Pages workflow have all been tested.
 
 **Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; the surfaces fade as they approach `Y=0`; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
 
 **Direction and layout amendment (28 September 2026):** rainfall now rises from `Y=0`, temperature extends below it, and increasing rainfall always maps to greater positive height. The visible sea rectangle has been replaced by a 24-division grid with a major line every fourth interval and radial edge fade. Pitch now spans -60° to +60°. Autoplay no longer discards slow timer frames, and the web settings and legends share one non-overlapping layout rail.
 
 **Temperature-direction amendment (28 September 2026):** the lower temperature mapping is reversed: 28 °C meets `Y=0`, and decreasing temperature produces progressively smaller negative Y. Transparency now also fades at that zero plane rather than at a separate temperature value.
+
+**Timeline-information amendment (28 September 2026):** interpolated positions no longer display fabricated hours. The timeline shows date, 21-station rainfall total and 21-station mean temperature; settings add a `0.25×–3×` speed slider; and a separate source/interpolation panel is collapsed by default.
 
 ## 1. Preserve the baseline
 
@@ -63,6 +65,8 @@ Gate: the scene changes date without rebuilding topology or adding actors, and u
 ## 7. Adapt interaction
 
 - Connect autoplay and the single timeline to the new frame controller.
+- Add one playback-speed multiplier to the same timer and keep hourly labels out of interpolated states.
+- Add a default-collapsed source/interpolation explanation without obscuring the map or timeline.
 - Rewrite camera constraints for Y-up rotation.
 - Pick only the base map, find the nearest station in X–Z and highlight both surface endpoints.
 - Remove elevation from hover text.
@@ -84,7 +88,7 @@ Gate: Python produces a compact, versioned and independently validated static pa
 
 - Add a locked Vite + `@kitware/vtk.js` frontend under `web/`.
 - Recreate the three-layer scene from the exported arrays without recalculating IDW.
-- Implement the single timeline, autoplay, Y-up camera limits, base picking, nearest-station text and linked highlight in the browser.
+- Implement the single timeline with date/aggregate summary, autoplay and speed controls, information panel, Y-up camera limits, base picking, nearest-station text and linked highlight in the browser.
 - Bundle dependencies locally, set Vite `base` to `./`, and test the `/polyu-ap-a2/` project subpath.
 - Keep generated `web/public/data/` and `site/` ignored.
 - Add a separate `pages.yml` workflow with read-only build permissions and a Pages/OIDC deployment job.

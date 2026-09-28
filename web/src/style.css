@@ -23,11 +23,21 @@ h1 { margin: 0; font-size: clamp(20px, 2.1vw, 34px); letter-spacing: 0.08em; tex
 .date-label { top: 28px; right: 30px; font-size: 17px; font-weight: 700; letter-spacing: 0.08em; }
 
 .right-rail { top: 66px; right: 28px; display: grid; width: 220px; gap: 12px; }
-.settings-panel { width: 100%; border: 1px solid rgba(220, 241, 244, 0.22); border-radius: 10px; background: rgba(4, 18, 24, 0.78); backdrop-filter: blur(8px); }
-.settings-panel summary { padding: 9px 12px; color: #dcecef; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; user-select: none; }
-.settings-panel summary::marker { color: #9bc8d2; }
+.settings-panel, .info-panel { width: 100%; border: 1px solid rgba(220, 241, 244, 0.22); border-radius: 10px; background: rgba(4, 18, 24, 0.78); backdrop-filter: blur(8px); }
+.settings-panel summary, .info-panel summary { padding: 9px 12px; color: #dcecef; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; user-select: none; }
+.settings-panel summary::marker, .info-panel summary::marker { color: #9bc8d2; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 7px 12px 11px; border-top: 1px solid rgba(220, 241, 244, 0.12); color: #b9ced2; font-size: 11px; }
-.setting-row input { width: 17px; height: 17px; accent-color: #ffe36b; cursor: pointer; }
+.setting-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: #ffe36b; cursor: pointer; }
+.speed-row { display: grid; gap: 7px; }
+.speed-row span { display: flex; justify-content: space-between; }
+.speed-row output { color: #ffe36b; font-variant-numeric: tabular-nums; }
+.speed-row input { width: 100%; accent-color: #ffe36b; cursor: ew-resize; }
+.info-content { max-height: min(320px, 42vh); padding: 2px 12px 11px; overflow-y: auto; border-top: 1px solid rgba(220, 241, 244, 0.12); color: #b9ced2; font-size: 10px; line-height: 1.45; }
+.info-content p { margin: 8px 0; }
+.info-content ul { margin: 6px 0; padding-left: 17px; }
+.info-content a { color: #9fdbe8; }
+.info-content strong { color: #edf8fa; }
+.info-content code { color: #ffe36b; }
 
 .legend { width: 100%; padding: 10px 12px; border: 1px solid rgba(220, 241, 244, 0.22); border-radius: 10px; background: rgba(4, 18, 24, 0.72); backdrop-filter: blur(7px); pointer-events: none; }
 .legend > span { display: block; margin-bottom: 7px; color: #dcecef; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -38,8 +48,8 @@ h1 { margin: 0; font-size: clamp(20px, 2.1vw, 34px); letter-spacing: 0.08em; tex
 
 .timeline-shell { left: 50%; bottom: 48px; width: min(680px, calc(100% - 48px)); padding: 13px 18px 10px; transform: translateX(-50%); border: 1px solid rgba(220, 241, 244, 0.24); border-radius: 15px; background: rgba(4, 18, 24, 0.78); box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28); backdrop-filter: blur(9px); }
 #timeline { width: 100%; accent-color: #f1d76f; cursor: ew-resize; }
-.timeline-labels { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; color: #a8bec3; font-size: 10px; letter-spacing: 0.08em; }
-.timeline-labels strong { color: #edf8fa; font-size: 12px; }
+.timeline-summary { display: block; margin-top: 5px; color: #edf8fa; font-size: 11px; line-height: 1.35; letter-spacing: 0.055em; text-align: center; }
+.timeline-labels { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; color: #a8bec3; font-size: 10px; letter-spacing: 0.08em; }
 
 .tooltip { min-width: 215px; max-width: 290px; padding: 10px 12px; border: 1px solid rgba(255, 227, 107, 0.55); border-radius: 9px; background: rgba(3, 16, 22, 0.9); color: #eff9fa; font-size: 12px; line-height: 1.45; pointer-events: none; white-space: nowrap; }
 .tooltip strong { color: #ffe36b; }
@@ -53,6 +63,8 @@ footer { left: 28px; bottom: 18px; color: #9db4b9; font-size: 10px; letter-spaci
   .title-block { left: 18px; top: 18px; max-width: calc(100% - 190px); }
   .title-block h1 { font-size: 18px; letter-spacing: 0.05em; }
   .title-block p { display: none; }
+  .info-content { max-height: 160px; }
   .timeline-shell { bottom: 35px; width: calc(100% - 28px); }
+  .timeline-summary { font-size: 9px; letter-spacing: 0.025em; }
   footer { display: none; }
 }

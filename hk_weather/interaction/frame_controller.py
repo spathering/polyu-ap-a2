@@ -29,9 +29,14 @@ class FrameController:
             return values[lower]
         return values[lower] * (1.0 - fraction) + values[upper] * fraction
 
-    def _display_datetime(self):
+    def _display_date(self):
         start = datetime.combine(self.weather.dates[0], time.min)
         return start + timedelta(days=self.position)
+
+    def _station_summary(self):
+        temperatures = self._blend(self.weather.temperatures_c)
+        rainfall = self._blend(self.weather.rainfall_mm)
+        return float(np.sum(rainfall)), float(np.mean(temperatures))
 
     def _station_points(self):
         ids = self.prepared.domain.station_node_ids
@@ -102,17 +107,20 @@ class FrameController:
         self.handles.station_endpoint_mesh.Modified()
         self._update_highlight(station_points)
 
-        moment = self._display_datetime()
+        moment = self._display_date()
+        rainfall_total, mean_temperature = self._station_summary()
         self.handles.date_actor.SetInput(
             "HONG KONG WEATHER SURFACES  ·  "
-            f"{moment.strftime('%d %B %Y · %H:%M').upper()}"
+            f"{moment.strftime('%d %B %Y').upper()}  ·  "
+            f"HK TOTAL RAINFALL {rainfall_total:.1f} MM  ·  "
+            f"HK MEAN TEMP {mean_temperature:.1f} °C"
         )
         if self.selected_station is not None:
             self.handles.cursor_actor.SetInput(self.station_text(self.selected_station))
         self.handles.plotter.render()
 
     def station_text(self, station_index):
-        moment = self._display_datetime()
+        moment = self._display_date()
         lower, upper, fraction = self._frame_indices()
         temperature = float(self._blend(self.weather.temperatures_c)[station_index])
         rainfall = float(self._blend(self.weather.rainfall_mm)[station_index])
@@ -130,7 +138,7 @@ class FrameController:
         return (
             f"{self.weather.station_names[station_index]} "
             f"({self.weather.station_codes[station_index]})\n"
-            f"{moment.strftime('%d %b %Y · %H:%M')}\n"
+            f"{moment.strftime('%d %b %Y')}\n"
             f"Mean temperature  {temperature:.1f} °C\n"
             f"Total rainfall       {rain_text}"
         )
