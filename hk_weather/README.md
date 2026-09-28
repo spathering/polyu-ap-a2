@@ -1,20 +1,14 @@
-# `hk_weather` implementation package
+# `hk_weather` package
 
-All non-trivial project code will live in this package. The root scripts remain
-small PEP 723 entry points so the assignment can still be run with commands such
-as `uv run plot.py`.
+All substantive Python implementation lives here; root scripts are small PEP 723 entry points.
 
-Planned layers:
+- `core/`: configuration, paths and shared data/geometry models.
+- `pipeline/`: one-time fetch, audit, tidy-data preparation and interpolation tuning.
+- `data/`: validated weather, official district and binary land/sea readers.
+- `geometry/`: projection, station-aware shared topology, exact k-nearest IDW, height mapping and invariants.
+- `render/`: flat base, upper/lower field surfaces, station links, text and shared PyVista scene.
+- `interaction/`: the single frame-update path, autoplay/timeline, Y-up camera guard and nearest-station probing.
+- `output/`: off-screen PNG generation from the shared desktop scene.
+- `web/`: versioned static-payload export and validation for the VTK.js client.
 
-- `core/`: configuration, domain models and shared contracts.
-- `pipeline/`: fetch, audit and preparation implementations.
-- `data/`: local file readers and validation.
-- `geometry/`: projection, terrain mesh, IDW and rainfall geometry.
-- `render/`: reusable PyVista scene and visual layers.
-- `interaction/`: timeline, camera limits, cursor probe and highlighting.
-- `output/`: off-screen screenshot generation through the same scene builder.
-
-The acquisition, audit and preparation implementations have moved into
-`core/` and `pipeline/`; their root files are now thin entry points. The current
-template renderer has also moved to `app.py` and will be replaced by the planned
-PyVista renderer in the next implementation phase.
+`app.py` is the only module that composes data, geometry, rendering and interaction. The browser never repeats projection or interpolation: `build_site.py` serialises the prepared models, and `web/src/main.js` only renders and updates those arrays.

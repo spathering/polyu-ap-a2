@@ -1,37 +1,47 @@
 # Process
 
-## Tools
+## Tools and source handling
 
-I used OpenAI Codex to read the assignment brief and week 3 teaching material, investigate public data sources, write and revise the acquisition and audit scripts, plan the visual design, and reorganise the Python code. I directed the subject choice and progressively specified the intended interaction: a real 3D terrain map, temperature as surface colour, rainfall as height, 20–80 degree camera pitch, unrestricted rotation, one floating timeline, and nearest-station information that follows the pointer.
+I used OpenAI Codex to read the brief and week 3 material, investigate public sources, audit candidate periods, restructure the code, and test the desktop and static-web outputs. I directed the subject and progressively changed the visual brief. Python and `uv` handle acquisition, checking, interpolation, geometry and PyVista rendering. Vite, pnpm and VTK.js create the static browser version. GitHub Actions is configured only for reproducible build and Pages deployment.
 
-Python and `uv` were used to fetch the Hong Kong Observatory files once, inspect their raw CSV structure, compare completed months, validate the selected period and generate the tidy dataset. The source responses were kept byte-for-byte under `data/raw/`. After restructuring the code, I reran the audit and preparation scripts and compared the generated CSV hash to confirm that the refactor had not changed the result.
+The acquisition script stores source responses unchanged under `data/raw/` and skips files already present. Runtime scripts read only local files. The selected tidy file was regenerated after refactors and retained the same 630 unique date–station rows. Web research was restricted to attributed sources: HKO/DATA.GOV.HK for observations, the Hong Kong government for district boundaries, AWS Open Data for cached Mapzen tiles, and official GitHub, uv, PyVista and Kitware documentation for deployment decisions.
 
-Web research was limited to primary or clearly attributed sources: Hong Kong Observatory and DATA.GOV.HK pages for weather data, CEDD maps for visual research, official PyVista documentation for 3D interaction capabilities, geoBoundaries for a planned land boundary, and the AWS Open Data Registry for a compact terrain source. Reference pictures are kept outside this repository in the working-material folder. They are design references only and will not be copied into the final visualisation.
+## Kept decisions
 
-## Kept
+I kept daily data rather than trying to fabricate an hourly history. HKO's free historical station files provide complete daily observations, while its free short-interval interfaces are mainly current snapshots. A 30-frame month is also small enough to verify and legible on one timeline.
 
-I kept the recommendation to use daily rather than hourly data. The free HKO interfaces provide suitable historical daily measurements from multiple stations, while their free short-interval interfaces mainly provide current snapshots. Daily data also produces a clear 30-frame timeline that is small enough to inspect carefully.
+April 2026 was kept only after comparing January–August across 23 candidate temperature/rainfall station pairs. April supplied 21 complete pairs, more than any other completed month. Excluding the two incomplete stations preserved every day and produced 630 rows with no duplicate keys, missing values or incomplete source flags.
 
-I kept the 2026 April selection only after testing it. The audit compared January through August across 23 same-site candidate station pairs. April had 21 complete pairs, more than any other completed month. Removing Shau Kei Wan and Wetland Park preserved all 30 dates and produced 630 complete date-station rows without duplicates or blanks.
+`Trace` rainfall was kept as a valid observation. It means less than 0.05 mm, not missing data. The tidy dataset stores 0.0 mm for rendering and a separate Boolean trace flag, and the hover label restores its meaning.
 
-I kept `Trace` rainfall as a real observation. An early version of the audit incorrectly reported the word `Trace` as invalid numeric data. Reading the note in the HKO rainfall files showed that it means rainfall below 0.05 mm. The corrected pipeline stores 0.0 mm for rendering and a separate `rainfall_trace=true` field so the original meaning remains available in the interface.
+The flat map and two surfaces use one Y-up coordinate convention. Station positions are exact nodes in the shared topology; temperature is always above `Y=0`, rainfall is at or below it, and both are forced through the original observations. One frame controller updates geometry, colours, station links, date and tooltip for autoplay and timeline input, so those paths cannot drift apart.
 
-I also kept the separation between direct observations and visual transformation. Station temperature is measured, but the continuous colour surface is inverse-distance interpolation. Rainfall is measured in millimetres, but the 3D column height is an explicitly exaggerated visual scale. These limits are stated in the README instead of being hidden.
+I kept separate desktop and browser renderers but not separate data logic. Python remains authoritative for projection, topology, tuned interpolation, height mapping and every frame. The static viewer consumes a versioned binary payload and performs no scientific recomputation. That producer/viewer boundary is what makes GitHub Pages possible without weakening the Python implementation.
 
-Finally, I kept the modular package proposal. Acquisition, auditing and preparation now live under `hk_weather/core/` and `hk_weather/pipeline/`; root scripts are only PEP 723 entry points. The final renderer will continue this structure with separate data, geometry, rendering, interaction and output layers. A single frame controller will update temperature, rain, date text and nearest-station text for both automatic playback and timeline dragging.
+## Rejected and revised decisions
 
-## Rejected
+The first concept covered a complete year and used a Plotly heat surface with rainfall columns. I rejected the year after inspecting the assignment scale and rejected Plotly when strict camera limits, continuous picking and linked highlights became requirements.
 
-The first research note proposed a full 2025 dataset of roughly 24 stations. I rejected it after the assignment scope and current data were examined. A complete current-year month is easier to verify, has enough temporal change for animation, and avoids turning a small visualisation assignment into a large archive project.
+The next implementation used real terrain elevation, temperature colour on the terrain, and one vertical rainfall column per station. It worked, but it no longer matched the revised visual argument. Elevation competed with temperature for height, and isolated columns did not describe rainfall distribution between stations. The final design therefore removes geographic height: a flat land/sea plane separates a positive temperature surface from a negative rainfall surface.
 
-I rejected the first July 2026 download as the final period. July had only 17 fully complete candidate pairs. April had 21, so it provides better spatial coverage. I also rejected Kai Tak and Tsing Yi before the month audit because the temperature and rainfall resources refer to different station codes or physical sites; matching by a similar name would have created false paired observations.
+I also rejected choosing interpolation settings by appearance alone. Leave-one-station-out tests across all 630 observations selected the fixed parameters now recorded in `data/derived/interpolation-report.json`. Rainfall is interpolated in `log1p` space to reduce the spatial dominance of extreme totals while remaining non-negative after inversion.
 
-The first interaction plan used Plotly in a self-contained HTML page, with Matplotlib producing a separate still. I rejected that architecture after defining the final interaction. Strict camera-angle limits, continuous terrain picking, text following the cursor, and a reusable pulsing station highlight are more direct in PyVista/VTK. PyVista can also create the required PNG from the same scene builder, avoiding two separate rendering implementations.
+PyVista's HTML export and a live Trame application were considered for deployment. They were rejected because GitHub Pages cannot execute a persistent Python service, and the project's timer, picking and linked highlight should not depend on an assumed callback conversion. A static VTK.js client with precomputed arrays is smaller, explicit and compatible with a project-site subpath.
 
-I rejected the Hong Kong Lands Department's complete 5 m terrain model as the main repository asset because the published whole-territory file is about 290 MB. The current plan uses a small number of open terrain tiles covering only Hong Kong, cached once and downsampled for the scene.
+## Implementation and corrections
 
-I also rejected a single large `plot.py`. Projection, interpolation, terrain construction, actor creation, camera limits, timeline state and cursor picking have different responsibilities. Keeping them in one file would duplicate basic transformations and make interaction changes likely to break the static output.
+The final Python package separates `core`, `pipeline`, `data`, `geometry`, `render`, `interaction`, `output` and `web` responsibilities. Root scripts are thin PEP 723 entry points. The scene contains a flat land/sea base, district outlines, two shared-topology surfaces and reusable station links; date changes modify arrays rather than rebuilding actors.
 
-## Current status
+The first dual-surface draft used overlapping blue palettes. Visual review showed that the layers were hard to distinguish, so temperature changed to purple–orange–yellow while rainfall remained cyan–blue. Increasing the map-domain resolution to 18,088 nodes reduced blockiness without exceeding the static-site budget. The initial browser run also exposed two API assumptions: VTK.js did not provide `setRenderPointsAsSpheres` on the current property object, and the generic render window did not expose `getOpenGLRenderWindow`. Removing the optional sphere hint and using the canvas pixel dimensions fixed startup and picking.
 
-The weather acquisition, audit, tidy CSV, design and initial package refactor are complete. The current `hk_weather/app.py` still contains the untouched template renderer and is intentionally identified as temporary. The terrain acquisition and PyVista scene described in `DESIGN.md` and `TECHNICAL.md` have not yet been implemented. This section should be replaced with final testing notes before submission.
+The final 24 April screenshot comes from the same Python scene used by the desktop interaction. The web payload records schema version, array shapes, byte order, file sizes and SHA-256 hashes. Generated staging data and `site/` are ignored; the workflow recreates and validates them rather than committing build output.
+
+## Verification status
+
+- Weather audit: 30 dates, 21 stations, 630 unique complete rows.
+- Interpolation: exact station hits, finite weights, non-negative rainfall, fixed scales.
+- Desktop: off-screen PNG generation succeeds with 18,088 shared nodes.
+- Static export: the complete Pages artifact validates at 9.6 MB.
+- Frontend: Vite production build transforms 351 modules successfully.
+- Browser: Edge loaded the served build with one WebGL canvas, autoplay advanced dates, dragging selected 24 April, and hover picking displayed and highlighted the nearest station without runtime errors.
+- Deployment: `.github/workflows/pages.yml` is ready; publishing still requires the repository's one-time Pages source setting and a push to `main`.

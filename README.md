@@ -1,33 +1,43 @@
-# Hong Kong Weather Terrain
+# Hong Kong Weather Surfaces
 
-![A 3D terrain map of Hong Kong coloured by temperature, with vertical rainfall columns](out/hong-kong-weather-april.png)
-
-> Development status: the source-data pipeline and design are complete. The final PyVista renderer and the image linked above are the next implementation stage.
+![Hong Kong weather shown as an upper temperature surface and lower rainfall surface](out/hong-kong-weather-april.png)
 
 ## The phenomenon
 
-Hong Kong is geographically small, but its daily weather is not uniform. Coastline, dense urban areas, inland valleys, islands and high ground can record different temperatures on the same day, while rainfall can be concentrated around only part of the territory. This project examines those spatial differences across the 30 days of April 2026.
+Hong Kong is geographically small, but its daily weather is not uniform. This project shows how mean temperature and total rainfall varied across 21 observation stations during April 2026.
 
-The final picture will be an interactive 3D terrain map. Daily mean temperature will colour the land surface, and daily total rainfall will become a vertical blue column at each observation station. The scene will play through the month automatically. Its only visible control will be a floating, draggable timeline. The camera will allow full 360-degree rotation with its pitch limited to 20–80 degrees. Moving the pointer over the terrain will show the nearest station's values and highlight that station.
+The flat Hong Kong land-and-sea map is the zero plane. Temperature forms a continuous surface above it: warmer observations rise higher and change from purple through orange to yellow. Rainfall forms a second surface below it: larger totals extend farther down and become darker blue. White links show where each measured station constrains the two estimated surfaces.
 
-## The source
+The scene advances through all 30 days automatically. Its only visible control is a floating draggable timeline. The camera supports 360-degree rotation, zoom, and a pitch restricted to 20–80 degrees. Moving the pointer over the map shows the nearest station's date, mean temperature and total rainfall, while highlighting both measured endpoints.
 
-The weather observations come from the Hong Kong Observatory's public datasets for [daily maximum, mean and minimum temperature](https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-temperature-info-hko), [daily total rainfall](https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-total-rainfall), and [weather-station locations](https://www.weather.gov.hk/en/cis/stn.htm). The raw responses are stored unchanged under `data/raw/`; the scripts do not repeatedly request them.
+## Data and method
 
-I audited 23 stations that publish both measurements at the same site across every completed month from January to August 2026. April had the best coverage. Shau Kei Wan contained two incomplete rainfall records and Wetland Park contained one incomplete temperature record, so the final dataset uses the remaining 21 complete stations.
+The observations come from the Hong Kong Observatory datasets for [daily temperature](https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-temperature-info-hko), [daily total rainfall](https://data.gov.hk/en-data/dataset/hk-hko-rss-daily-total-rainfall), and [weather-station locations](https://www.weather.gov.hk/en/cis/stn.htm). The base uses the official [Hong Kong 18-district boundary](https://www.had.gov.hk/en/public_services/public_data/) and locally cached Mapzen tiles only to distinguish land from sea; geographic elevation is not rendered.
 
-`data/hk-weather-2026-04.csv` contains 630 rows: 21 stations × 30 days. Each row represents one station on one date and contains station code and name, latitude and longitude, station elevation in metres, daily mean temperature in degrees Celsius, daily total rainfall in millimetres, and a Boolean trace-rainfall marker. All 630 temperature and 630 rainfall source records carry the HKO `C` completeness flag. Twelve rainfall observations are `Trace`, meaning less than 0.05 mm; they remain identifiable instead of being treated as missing values.
+April was selected after auditing every completed month from January to August 2026 across 23 same-site candidates. Shau Kei Wan had two incomplete rainfall records and Wetland Park had one incomplete temperature record, so the final tidy dataset contains 630 complete rows: 21 stations × 30 days. Twelve `Trace` rainfall observations are preserved as trace flags and visualised at 0 mm rather than treated as missing.
 
-The planned terrain layer will use locally cached [Mapzen Terrain Tiles from the AWS Open Data Registry](https://registry.opendata.aws/terrain-tiles/) and a locally stored Hong Kong boundary. Rendering will remain available without a network connection.
+Both surfaces share one 18,088-node horizontal topology containing exact station nodes. Temperature uses exact k-nearest inverse-distance weighting (IDW) on Celsius values. Rainfall uses local IDW after a `log1p` transform and is converted back to millimetres. Leave-one-station-out validation selected `power=1.5, k=20` for temperature and `power=2.5, k=8` for rainfall. Fixed month-wide ranges—14–28 °C and 0–67 mm—make dates comparable.
 
-## What the picture shows
+The coloured shapes between stations are estimates, not additional measurements. Daily means hide within-day temperature changes, daily totals hide the timing of rain, and surface height is an explanatory visual scale rather than physical altitude. Areas outside the supported Hong Kong land domain are not extrapolated.
 
-Temperature is interpolated between observation stations with inverse-distance weighting and displayed with one fixed 14–28 °C colour scale. Rainfall uses one fixed linear 0–67 mm column-height scale. Keeping both scales fixed makes changes between dates comparable. The README image will use 24 April, the day with the highest summed rainfall across the 21 stations.
-
-The coloured areas between stations are estimates, not measurements at every location. Daily mean temperature hides the day-night cycle, and daily rainfall hides the time and intensity of individual showers. Terrain height represents geography, but rainfall-column height is deliberately exaggerated as a visual scale and must not be read as physical altitude.
-
-## Run it
+## Run the Python version
 
 ```bash
 uv run plot.py
 ```
+
+This regenerates `out/hong-kong-weather-april.png` from the same PyVista scene and opens the interactive desktop view. It reads only repository data and needs no network connection.
+
+## Build the static web version
+
+```bash
+uv run build_site.py
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web build
+uv run validate_site.py
+uv run python -m http.server 8000 --directory site
+```
+
+Open `http://127.0.0.1:8000/`. The VTK.js viewer is a fully static client: Python prepares the topology and all 30 frames, then the browser handles rendering and interaction without a server, API key, WebSocket, or CDN.
+
+`.github/workflows/pages.yml` repeats the export, locked frontend build and validation before publishing `site/`. After the repository's Pages source is set to **GitHub Actions** and this work is pushed to `main`, the expected project URL is [https://spathering.github.io/polyu-ap-a2/](https://spathering.github.io/polyu-ap-a2/).

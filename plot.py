@@ -1,6 +1,13 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["matplotlib"]
+# dependencies = [
+#   "numpy>=2,<3",
+#   "Pillow>=11,<13",
+#   "pyproj>=3.7,<4",
+#   "pyvista>=0.49,<0.50",
+#   "shapely>=2,<3",
+#   "vtk>=9.5,<10",
+# ]
 # ///
 
 """Render the project visualisation through the package application."""

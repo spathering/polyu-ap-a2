@@ -1,6 +1,9 @@
 # Made from data/ on every run. Commit out/; never commit site/.
 site/
+web/public/data/
+web/node_modules/
 data/cache/
+.pnpm-store/
 
 # Machinery, not work.
 .venv/
