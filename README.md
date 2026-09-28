@@ -1,5 +1,7 @@
 # Hong Kong Weather Surfaces
 
+[View the live interactive visualisation](https://spathering.github.io/polyu-ap-a2/)
+
 ![Hong Kong weather shown as an upper rainfall surface and lower temperature surface](out/hong-kong-weather-april.png)
 
 ## The phenomenon
@@ -40,4 +42,4 @@ uv run python -m http.server 8000 --directory site
 
 Open `http://127.0.0.1:8000/`. The VTK.js viewer is a fully static client: Python prepares the topology and all 30 frames, then the browser handles rendering and interaction without a server, API key, WebSocket, or CDN.
 
-`.github/workflows/pages.yml` repeats the export, locked frontend build and validation before publishing `site/`. After the repository's Pages source is set to **GitHub Actions** and this work is pushed to `main`, the expected project URL is [https://spathering.github.io/polyu-ap-a2/](https://spathering.github.io/polyu-ap-a2/).
+The deployed interactive version is available at [https://spathering.github.io/polyu-ap-a2/](https://spathering.github.io/polyu-ap-a2/). The `.github/workflows/pages.yml` workflow repeats the export, locked frontend build and validation before publishing `site/` to GitHub Pages.
