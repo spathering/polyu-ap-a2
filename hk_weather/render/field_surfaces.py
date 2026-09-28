@@ -77,7 +77,7 @@ def add_field_surfaces(plotter, prepared):
         pickable=False,
         show_edges=False,
         scalar_bar_args={
-            "title": "Temperature depth (°C)",
+            "title": "Temperature (°C)",
             "vertical": True,
             "position_x": 0.87,
             "position_y": 0.12,

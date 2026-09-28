@@ -14,7 +14,7 @@ The main visual statement is that Hong Kong's temperature forms a broad, slowly 
 
 The scene uses Y as its only height axis. Projected easting becomes X, projected northing becomes Z, and every base-map vertex has `Y = 0`. Station longitude and latitude therefore remain aligned across the base, temperature surface and rainfall surface.
 
-Temperature uses one fixed 14–28 °C scale for the whole month. Its 14 °C baseline lies exactly on the reference grid and warmer values extend farther downward. Rainfall uses a 0 mm baseline on the same grid and larger totals rise higher. Alpha approaches zero near each baseline, so low-signal regions dissolve into the middle grid instead of forming opaque sheets. Temperature uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
+Temperature uses one fixed 14–28 °C scale for the whole month. Its height direction is reversed within the lower half of the scene: 28 °C meets the reference grid and lower temperatures extend farther into negative Y. Rainfall uses a 0 mm baseline on the grid and larger totals rise higher. Alpha approaches zero near the independent 14 °C temperature fade baseline and 0 mm rainfall baseline. Temperature uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
 
 Rainfall uses one fixed 0–67 mm scale. Zero rain meets the reference grid; increasing rain rises farther above it. The upper surface uses a pale-cyan-to-deep-blue scale. The two height conversions are linear but independent because °C and mm are different units. Legends always show the original units rather than suggesting that scene height is physical altitude.
 
@@ -46,6 +46,7 @@ The surfaces estimate conditions between a limited number of stations. They do n
 
 - The base is flat and clearly separates land from sea.
 - Rainfall stays at or above `Y = 0`; temperature stays at or below it.
+- Lower temperatures always have smaller Y values than higher temperatures.
 - Both surfaces hit every station's value for every date.
 - All dates use fixed height and colour scales.
 - The upper surface, base map and lower surface remain legible in the 24 April still.

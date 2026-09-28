@@ -66,25 +66,25 @@ A new thin `tune.py` entry will run leave-one-station-out validation across all 
 
 ## Height mapping and frame data
 
-Height conversion has one implementation in `geometry/height_mapping.py`. Both lower-range baselines map to the middle plane:
+Height conversion has one implementation in `geometry/height_mapping.py`. Rainfall grows upward from 0 mm, while the lower temperature surface is reversed so colder values have smaller Y:
 
 ```text
-temperature_y = Ht × (T - 14) / (28 - 14)
-rainfall_y    = -Hr × R / 67
+temperature_y = -Ht × (28 - T) / (28 - 14)
+rainfall_y    =  Hr × R / 67
 ```
 
-`gap`, `Ht` and `Hr` are fractions of the horizontal map span. Both conversions are fixed for the whole month and have inverse functions for legends and tests.
+`Ht` and `Hr` are fractions of the horizontal map span. Both conversions are fixed for the whole month and have inverse functions for legends and tests. The 14 °C temperature value remains the opacity-fade baseline but is no longer the zero-height anchor; 28 °C maps to `Y=0`.
 
 All 30 temperature fields and 30 rainfall fields are computed once at startup. A `FieldFrames` model stores source-unit fields and mapped Y arrays. Runtime changes never recalculate spatial distances or IDW. `FrameController.apply(position)` linearly blends the two neighbouring prepared daily frames, replaces the meshes' Y columns and scalars, updates station links, date/time and hover text, and requests one render.
 
 ## Rendering and interaction
 
-The base map is translucent but geographically clear. The upper surface uses a purple-to-orange-to-yellow temperature scale; the lower surface uses a cyan-to-deep-blue rainfall scale and two-sided rendering. Lookup-table alpha follows a smoothstep curve from zero at the 14 °C and 0 mm baselines to each surface's maximum opacity. Depth peeling is enabled when supported. A fragment-shader replacement computes screen-space fog from `gl_FragCoord.z` and blends distant fragments toward the background.
+The base map is translucent but geographically clear. The upper rainfall surface uses a cyan-to-deep-blue scale; the lower temperature surface uses a purple-to-orange-to-yellow scale. Lookup-table alpha follows a smoothstep curve from zero at the 14 °C and 0 mm fade baselines to each surface's maximum opacity. Depth peeling is enabled when supported. A fragment-shader replacement computes screen-space fog from `gl_FragCoord.z` and blends distant fragments toward the background.
 
 Each station owns a three-point vertical link:
 
 ```text
-(X, temperature_y, Z) -> (X, 0, Z) -> (X, rainfall_y, Z)
+(X, rainfall_y, Z) -> (X, 0, Z) -> (X, temperature_y, Z)
 ```
 
 The upper and lower endpoints show where the actual observations constrain each surface. Hover picking targets land plus an invisible zero-plane water mesh. The picked point is compared with station X–Z positions, and one reusable highlight updates the link and both endpoints.

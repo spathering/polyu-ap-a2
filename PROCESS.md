@@ -36,9 +36,11 @@ The first dual-surface draft used overlapping blue palettes. Visual review showe
 
 The final 24 April screenshot comes from the same Python scene used by the desktop interaction. The web payload records schema version, array shapes, byte order, file sizes and SHA-256 hashes. Generated staging data and `site/` are ignored; the workflow recreates and validates them rather than committing build output.
 
-The later interaction pass changed the timeline from 30 hard steps to a continuous position. Spatial IDW remains precomputed only on the 30 real days; runtime code linearly blends adjacent prepared fields and labels intermediate states with an explicit time. I added a collapsible settings panel instead of another permanently visible control, and its checked automatic-playback option is now the sole source of playback state. The old positive temperature gap was removed: 14 °C and 0 mm both map to `Y=0`, smooth alpha ramps suppress values close to those baselines, and a fragment-depth shader supplies screen-space fog in both renderers.
+The later interaction pass changed the timeline from 30 hard steps to a continuous position. Spatial IDW remains precomputed only on the 30 real days; runtime code linearly blends adjacent prepared fields and labels intermediate states with an explicit time. I added a collapsible settings panel instead of another permanently visible control, and its checked automatic-playback option is now the sole source of playback state. Smooth alpha ramps suppress values close to the 14 °C and 0 mm fade baselines, and a fragment-depth shader supplies screen-space fog in both renderers.
 
 The final orientation pass moved rainfall to positive Y and temperature to negative Y so increased rainfall reads directly as increased height. Camera pitch was widened across the reference plane to -60–60°. The opaque sea rectangle was removed and replaced visually by minor and major grid lines whose alpha fades radially; an invisible rectangle remains only as the water picking target. The web settings and legends now flow in one right-hand rail, and pointer text avoids both that rail and the timeline. Desktop autoplay was corrected so long render frames are capped rather than discarded.
+
+The temperature height mapping was then reversed inside the negative half-space: 28 °C is the zero-height anchor, and colder observations move farther downward. This changes geometry and station endpoint height only; the fixed colour range and 14 °C transparency fade remain unchanged.
 
 ## Verification status
 

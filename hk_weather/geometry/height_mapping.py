@@ -6,17 +6,15 @@ from hk_weather.core.config import (
     RAINFALL_BASELINE_MM,
     RAINFALL_HEIGHT_FRACTION,
     RAINFALL_RANGE_MM,
-    TEMPERATURE_BASELINE_C,
     TEMPERATURE_HEIGHT_FRACTION,
     TEMPERATURE_RANGE_C,
 )
 
 
 def temperature_to_y(values_c, horizontal_span_m):
-    _, high = TEMPERATURE_RANGE_C
+    low, high = TEMPERATURE_RANGE_C
     normalised = np.clip(
-        (np.asarray(values_c) - TEMPERATURE_BASELINE_C)
-        / (high - TEMPERATURE_BASELINE_C),
+        (high - np.asarray(values_c)) / (high - low),
         0.0,
         1.0,
     )
@@ -35,13 +33,11 @@ def rainfall_to_y(values_mm, horizontal_span_m):
 
 
 def y_to_temperature(values_y, horizontal_span_m):
-    normalised = -np.asarray(values_y) / (
+    normalised = np.asarray(values_y) / (
         horizontal_span_m * TEMPERATURE_HEIGHT_FRACTION
     )
-    _, high = TEMPERATURE_RANGE_C
-    return TEMPERATURE_BASELINE_C + normalised * (
-        high - TEMPERATURE_BASELINE_C
-    )
+    low, high = TEMPERATURE_RANGE_C
+    return high + normalised * (high - low)
 
 
 def y_to_rainfall(values_y, horizontal_span_m):

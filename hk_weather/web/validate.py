@@ -7,6 +7,7 @@ import numpy as np
 
 from hk_weather.core.config import WEB_ARTIFACT_TARGET_BYTES, WEB_SCHEMA_VERSION
 from hk_weather.core.paths import SITE
+from hk_weather.geometry.height_mapping import rainfall_to_y, temperature_to_y
 
 
 def _sha256(path):
@@ -45,8 +46,27 @@ def validate_site(site=SITE):
 
     temperature_y = np.fromfile(site / "data" / "temperature-y.f32", dtype="<f4")
     rainfall_y = np.fromfile(site / "data" / "rainfall-y.f32", dtype="<f4")
+    temperature_values = np.fromfile(
+        site / "data" / "temperature-values.f32", dtype="<f4"
+    )
+    rainfall_values = np.fromfile(
+        site / "data" / "rainfall-values.f32", dtype="<f4"
+    )
     if not np.all(temperature_y <= 1e-7) or not np.all(rainfall_y >= -1e-7):
         raise RuntimeError("web surface Y signs are invalid")
+    horizontal_span = manifest["horizontalSpan"]
+    if not np.allclose(
+        temperature_y,
+        temperature_to_y(temperature_values, horizontal_span),
+        atol=2e-3,
+    ):
+        raise RuntimeError("web temperature height direction is invalid")
+    if not np.allclose(
+        rainfall_y,
+        rainfall_to_y(rainfall_values, horizontal_span),
+        atol=2e-3,
+    ):
+        raise RuntimeError("web rainfall height direction is invalid")
     if manifest["temperature"]["baseline"] != 14.0:
         raise RuntimeError("temperature baseline is not 14 °C")
     if manifest["rainfall"]["baseline"] != 0.0:
