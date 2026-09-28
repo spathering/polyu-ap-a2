@@ -20,8 +20,12 @@ from hk_weather.render.text import add_cursor_text, add_date_text, add_surface_n
 @dataclass
 class SceneHandles:
     plotter: object
-    sea_mesh: object
-    sea_actor: object
+    pick_plane_mesh: object
+    pick_plane_actor: object
+    grid_minor_mesh: object
+    grid_minor_actor: object
+    grid_major_mesh: object
+    grid_major_actor: object
     land_mesh: object
     land_actor: object
     district_mesh: object
@@ -74,12 +78,16 @@ def build_scene(prepared, off_screen=False, window_size=(1280, 820)):
         pass
     return SceneHandles(
         plotter=plotter,
-        sea_mesh=base[0],
-        sea_actor=base[1],
-        land_mesh=base[2],
-        land_actor=base[3],
-        district_mesh=base[4],
-        district_actor=base[5],
+        pick_plane_mesh=base[0],
+        pick_plane_actor=base[1],
+        grid_minor_mesh=base[2],
+        grid_minor_actor=base[3],
+        grid_major_mesh=base[4],
+        grid_major_actor=base[5],
+        land_mesh=base[6],
+        land_actor=base[7],
+        district_mesh=base[8],
+        district_actor=base[9],
         temperature_mesh=surfaces[0],
         temperature_actor=surfaces[1],
         rainfall_mesh=surfaces[2],

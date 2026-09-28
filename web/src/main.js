@@ -24,7 +24,6 @@ const state = {
   position: 0,
   playPosition: 0,
   selectedStation: null,
-  autoplay: true,
   scrubbing: false,
   lastAnimationAt: null,
   lastPickAt: 0,
@@ -180,6 +179,85 @@ function createLines(lines, colour, opacity = 0.72, width = 1.2) {
   actor.getProperty().setOpacity(opacity);
   actor.getProperty().setLineWidth(width);
   return { polyData, actor };
+}
+
+function createGrid(corners, settings) {
+  const xs = corners.map(([x]) => x);
+  const zs = corners.map(([, z]) => z);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minZ = Math.min(...zs);
+  const maxZ = Math.max(...zs);
+  const centreX = (minX + maxX) / 2;
+  const centreZ = (minZ + maxZ) / 2;
+  const halfX = Math.max((maxX - minX) / 2, 1);
+  const halfZ = Math.max((maxZ - minZ) / 2, 1);
+  const values = Array.from(
+    { length: settings.divisions + 1 },
+    (_, index) => index / settings.divisions,
+  );
+
+  function layer(major) {
+    const coordinates = [];
+    const cells = [];
+    const colours = [];
+    let cursor = 0;
+    const rgb = major ? [128, 164, 172] : [88, 122, 130];
+    const opacity = major ? settings.majorOpacity : settings.minorOpacity;
+
+    function addLine(samples) {
+      cells.push(samples.length);
+      samples.forEach(([x, z]) => {
+        coordinates.push(x, 0, z);
+        cells.push(cursor);
+        cursor += 1;
+        const radius = Math.min(1, Math.hypot((x - centreX) / halfX, (z - centreZ) / halfZ));
+        const position = Math.max(0, Math.min(
+          1, (radius - settings.fadeStart) / (1 - settings.fadeStart),
+        ));
+        const fade = 1 - position * position * (3 - 2 * position);
+        colours.push(...rgb, Math.round(255 * opacity * fade));
+      });
+    }
+
+    values.forEach((fraction, index) => {
+      if ((index % settings.majorEvery === 0) === major) {
+        const x = minX + fraction * (maxX - minX);
+        addLine(values.map((value) => [x, minZ + value * (maxZ - minZ)]));
+      }
+    });
+    values.forEach((fraction, index) => {
+      if ((index % settings.majorEvery === 0) === major) {
+        const z = minZ + fraction * (maxZ - minZ);
+        addLine(values.map((value) => [minX + value * (maxX - minX), z]));
+      }
+    });
+
+    const points = vtkPoints.newInstance();
+    points.setData(Float32Array.from(coordinates), 3);
+    const polyData = vtkPolyData.newInstance();
+    polyData.setPoints(points);
+    polyData.setLines(vtkCellArray.newInstance({ values: Uint32Array.from(cells) }));
+    polyData.getPointData().setScalars(vtkDataArray.newInstance({
+      name: 'Grid colours',
+      numberOfComponents: 4,
+      values: Uint8Array.from(colours),
+    }));
+    const mapper = vtkMapper.newInstance();
+    mapper.setInputData(polyData);
+    mapper.setColorModeToDirectScalars();
+    mapper.setScalarModeToUsePointData();
+    mapper.setScalarVisibility(true);
+    const actor = vtkActor.newInstance();
+    actor.setMapper(mapper);
+    actor.getProperty().setOpacity(1);
+    actor.getProperty().setAmbient(1);
+    actor.getProperty().setDiffuse(0);
+    actor.getProperty().setLineWidth(major ? 1.8 : 1.0);
+    return { polyData, actor };
+  }
+
+  return { minor: layer(false), major: layer(true) };
 }
 
 function createStationActors(stations) {
@@ -349,19 +427,22 @@ async function start() {
   const land = createSolidMesh(nodes, faces, 0, manifest.base.landColour, manifest.base.landOpacity);
   const seaNodes = Float32Array.from(manifest.seaCorners.flat());
   const seaFaces = Uint32Array.from([0, 1, 2, 0, 2, 3]);
-  const sea = createSolidMesh(seaNodes, seaFaces, 0, manifest.base.seaColour, manifest.base.seaOpacity);
+  const pickPlane = createSolidMesh(seaNodes, seaFaces, 0, manifest.base.seaColour, 0);
+  const grid = createGrid(manifest.seaCorners, manifest.grid);
   const districts = createLines(districtLines, '#5e7479');
   const stationActors = createStationActors(stations);
 
   [
-    temp.actor, rain.actor, land.actor, sea.actor, districts.actor,
+    temp.actor, rain.actor, land.actor, grid.minor.actor, grid.major.actor, districts.actor,
     stationActors.linkActor, stationActors.endpointActor,
     stationActors.highlightActor, stationActors.highlightEndpointActor,
   ].forEach((actor) => applyDepthFog(actor.getMapper(), manifest.depthFog));
 
-  renderer.addActor(sea.actor);
+  renderer.addActor(pickPlane.actor);
   renderer.addActor(rain.actor);
   renderer.addActor(land.actor);
+  renderer.addActor(grid.minor.actor);
+  renderer.addActor(grid.major.actor);
   renderer.addActor(districts.actor);
   renderer.addActor(temp.actor);
   renderer.addActor(stationActors.linkActor);
@@ -394,8 +475,8 @@ async function start() {
     const blend = frameBlend(position);
     stations.forEach((station, index) => {
       const base = index * 9;
-      const upperY = blendedValue(temperatureY, station.node, blend);
-      const lowerY = blendedValue(rainfallY, station.node, blend);
+      const upperY = blendedValue(rainfallY, station.node, blend);
+      const lowerY = blendedValue(temperatureY, station.node, blend);
       stationActors.linkCoordinates.set(
         [station.x, upperY, station.z, station.x, 0, station.z, station.x, lowerY, station.z],
         base,
@@ -499,7 +580,6 @@ async function start() {
   });
   slider.addEventListener('change', () => { state.scrubbing = false; });
   autoplayToggle.addEventListener('change', () => {
-    state.autoplay = autoplayToggle.checked;
     state.lastAnimationAt = performance.now();
   });
 
@@ -517,7 +597,7 @@ async function start() {
   picker.setPickFromList(true);
   picker.initializePickList();
   picker.addPickList(land.actor);
-  picker.addPickList(sea.actor);
+  picker.addPickList(pickPlane.actor);
 
   function clearSelection() {
     state.selectedStation = null;
@@ -555,8 +635,19 @@ async function start() {
     updateHighlight();
     tooltip.innerHTML = tooltipHtml(nearest);
     tooltip.hidden = false;
-    const left = Math.min(event.clientX + 16, window.innerWidth - 310);
-    const top = Math.min(event.clientY + 16, window.innerHeight - 130);
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const railRect = document.querySelector('.right-rail').getBoundingClientRect();
+    const timelineRect = document.querySelector('.timeline-shell').getBoundingClientRect();
+    let left = event.clientX + 16;
+    let top = event.clientY + 16;
+    if (left + tooltipRect.width + 8 > railRect.left && event.clientY < railRect.bottom + 8) {
+      left = event.clientX - tooltipRect.width - 16;
+    }
+    if (top + tooltipRect.height + 8 > timelineRect.top) {
+      top = event.clientY - tooltipRect.height - 16;
+    }
+    left = Math.min(left, window.innerWidth - tooltipRect.width - 8);
+    top = Math.min(top, window.innerHeight - tooltipRect.height - 8);
     tooltip.style.left = `${Math.max(8, left)}px`;
     tooltip.style.top = `${Math.max(8, top)}px`;
     renderWindow.render();
@@ -586,7 +677,7 @@ async function start() {
     if (state.lastAnimationAt === null) state.lastAnimationAt = timestamp;
     const elapsed = Math.min(timestamp - state.lastAnimationAt, manifest.timeline.intervalMs);
     state.lastAnimationAt = timestamp;
-    if (state.autoplay && !state.scrubbing) {
+    if (autoplayToggle.checked && !state.scrubbing) {
       state.playPosition += elapsed / manifest.timeline.intervalMs;
       if (state.playPosition >= manifest.dates.length) {
         state.playPosition %= manifest.dates.length;

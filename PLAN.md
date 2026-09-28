@@ -4,7 +4,9 @@ This plan replaced the elevation-and-columns renderer without changing the valid
 
 **Implementation status (24 September 2026):** stages 1–10 are complete locally. The Python screenshot and interaction, tuned dual surfaces, static payload, VTK.js viewer, production build, artifact validation and Pages workflow have all been tested. Remote publication is the only repository-owner step remaining: enable **Settings → Pages → GitHub Actions**, commit this work and push it to `main`.
 
-**Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; temperature and rainfall start at the common `Y=0` baseline and fade near 14 °C/0 mm; pitch expands to 5–88°; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
+**Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; temperature and rainfall start at the common `Y=0` baseline and fade near 14 °C/0 mm; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
+
+**Direction and layout amendment (28 September 2026):** rainfall now rises from `Y=0`, temperature extends below it, and increasing rainfall always maps to greater positive height. The visible sea rectangle has been replaced by a 24-division grid with a major line every fourth interval and radial edge fade. Pitch now spans -60° to +60°. Autoplay no longer discards slow timer frames, and the web settings and legends share one non-overlapping layout rail.
 
 ## 1. Preserve the baseline
 
@@ -41,11 +43,11 @@ Gate: all station values are exact, rainfall is never negative, and the paramete
 
 ## 5. Render one dual-surface frame
 
-- Implement positive temperature and negative rainfall Y mapping.
-- Render 24 April with the upper surface, flat base, lower surface, station links and two legends.
+- Implement positive rainfall and negative temperature Y mapping.
+- Render 24 April with the upper rainfall surface, fading grid, lower temperature surface, station links and two legends.
 - Tune transparency, depth peeling, camera distance and visual height.
 
-Gate: viewers can distinguish temperature above, the zero-plane map and rainfall below without reading code.
+Gate: viewers can distinguish rainfall above, the zero grid and temperature below without reading code.
 
 ## 6. Precompute and animate 30 frames
 
@@ -63,7 +65,7 @@ Gate: the scene changes date without rebuilding topology or adding actors, and u
 - Pick only the base map, find the nearest station in X–Z and highlight both surface endpoints.
 - Remove elevation from hover text.
 
-Gate: autoplay setting, continuous dragging, 360-degree rotation, 5–88 degree pitch and nearest-station feedback all work together.
+Gate: autoplay setting, continuous dragging, 360-degree rotation, -60–60 degree pitch and nearest-station feedback all work together.
 
 ## 8. Export a static web payload
 

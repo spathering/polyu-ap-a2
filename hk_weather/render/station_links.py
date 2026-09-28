@@ -11,9 +11,9 @@ def station_link_points(station_xz, temperature_y, rainfall_y):
     points = np.empty((len(station_xz) * 3, 3), dtype=float)
     for index, (x, z) in enumerate(station_xz):
         offset = index * 3
-        points[offset] = (x, temperature_y[index], z)
+        points[offset] = (x, rainfall_y[index], z)
         points[offset + 1] = (x, 0.0, z)
-        points[offset + 2] = (x, rainfall_y[index], z)
+        points[offset + 2] = (x, temperature_y[index], z)
     return points
 
 

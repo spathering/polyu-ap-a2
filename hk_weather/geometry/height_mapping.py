@@ -20,7 +20,7 @@ def temperature_to_y(values_c, horizontal_span_m):
         0.0,
         1.0,
     )
-    return horizontal_span_m * TEMPERATURE_HEIGHT_FRACTION * normalised
+    return -horizontal_span_m * TEMPERATURE_HEIGHT_FRACTION * normalised
 
 
 def rainfall_to_y(values_mm, horizontal_span_m):
@@ -31,11 +31,11 @@ def rainfall_to_y(values_mm, horizontal_span_m):
         0.0,
         1.0,
     )
-    return -horizontal_span_m * RAINFALL_HEIGHT_FRACTION * normalised
+    return horizontal_span_m * RAINFALL_HEIGHT_FRACTION * normalised
 
 
 def y_to_temperature(values_y, horizontal_span_m):
-    normalised = np.asarray(values_y) / (
+    normalised = -np.asarray(values_y) / (
         horizontal_span_m * TEMPERATURE_HEIGHT_FRACTION
     )
     _, high = TEMPERATURE_RANGE_C
@@ -45,7 +45,7 @@ def y_to_temperature(values_y, horizontal_span_m):
 
 
 def y_to_rainfall(values_y, horizontal_span_m):
-    normalised = -np.asarray(values_y) / (
+    normalised = np.asarray(values_y) / (
         horizontal_span_m * RAINFALL_HEIGHT_FRACTION
     )
     _, high = RAINFALL_RANGE_MM

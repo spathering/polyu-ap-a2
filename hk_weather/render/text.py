@@ -35,8 +35,8 @@ def add_cursor_text(plotter):
 def add_surface_note(plotter):
     actor = _text_actor(13, 0.55)
     actor.SetInput(
-        "TEMPERATURE ABOVE · RAINFALL BELOW\n"
-        "Baseline plane Y = 0 · spatial and between-day values are estimates"
+        "RAINFALL ABOVE · TEMPERATURE BELOW\n"
+        "Reference grid Y = 0 · spatial and between-day values are estimates"
     )
     actor.SetDisplayPosition(28, 30)
     plotter.renderer.AddViewProp(actor)

@@ -2,23 +2,23 @@
 
 ## Visual idea
 
-The revised work uses the current flat Hong Kong land-and-sea map as its zero plane. It no longer visualises real terrain elevation. Daily observations from 21 weather stations generate two continuous surfaces for every day of April 2026:
+The revised work uses the current flat Hong Kong land map and fading grid as its zero reference. It no longer visualises real terrain elevation. Daily observations from 21 weather stations generate two continuous surfaces for every day of April 2026:
 
-- temperature rises above the map on the positive Y axis;
-- rainfall extends below the map on the negative Y axis;
-- the flat map remains at `Y = 0` and distinguishes land, sea, coastline and district boundaries.
+- rainfall rises above the map on the positive Y axis, with greater rainfall higher;
+- temperature extends below the map on the negative Y axis;
+- a two-scale major/minor grid remains at `Y = 0`, fades with distance from the centre, and anchors the flat land and district outlines without an opaque sea rectangle.
 
-The main visual statement is that Hong Kong's temperature forms a broad, slowly changing field, while rainfall forms more local and abrupt depressions. Measured station values are shown as endpoints connected through the zero plane. Every point between stations is explicitly an interpolation rather than a direct observation.
+The main visual statement is that Hong Kong's temperature forms a broad, slowly changing lower field, while rainfall forms more local and abrupt upper peaks. Measured station values are shown as endpoints connected through the zero grid. Every point between stations is explicitly an interpolation rather than a direct observation.
 
 ## Coordinate and visual mapping
 
 The scene uses Y as its only height axis. Projected easting becomes X, projected northing becomes Z, and every base-map vertex has `Y = 0`. Station longitude and latitude therefore remain aligned across the base, temperature surface and rainfall surface.
 
-Temperature uses one fixed 14–28 °C scale for the whole month. Its 14 °C baseline lies exactly on the map plane and warmer values rise higher. Rainfall uses a 0 mm baseline on the same plane and larger totals extend downward. Alpha approaches zero near each baseline, so low-signal regions dissolve into the middle plane instead of forming opaque sheets. The upper surface uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
+Temperature uses one fixed 14–28 °C scale for the whole month. Its 14 °C baseline lies exactly on the reference grid and warmer values extend farther downward. Rainfall uses a 0 mm baseline on the same grid and larger totals rise higher. Alpha approaches zero near each baseline, so low-signal regions dissolve into the middle grid instead of forming opaque sheets. Temperature uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
 
-Rainfall uses one fixed 0–67 mm scale. Zero rain meets the base plane; increasing rain extends farther down. The lower surface uses a pale-cyan-to-deep-blue scale. The two height conversions are linear but independent because °C and mm are different units. Legends always show the original units rather than suggesting that scene height is physical altitude.
+Rainfall uses one fixed 0–67 mm scale. Zero rain meets the reference grid; increasing rain rises farther above it. The upper surface uses a pale-cyan-to-deep-blue scale. The two height conversions are linear but independent because °C and mm are different units. Legends always show the original units rather than suggesting that scene height is physical altitude.
 
-The base map uses muted green land and pale blue sea. It is translucent enough for the lower rainfall surface to remain visible, while coastline and district lines preserve geographic orientation. There is no hillshade, contour line or terrain exaggeration.
+The base uses muted translucent land, district lines and a cool two-scale grid. The former sea rectangle is no longer visible; a fully transparent plane is retained only for pointer picking over water. Grid alpha falls smoothly to zero near the extent edge. There is no hillshade, contour line or terrain exaggeration.
 
 ## Surface interpolation
 
@@ -32,7 +32,7 @@ The power and neighbour count are not chosen only by appearance. Candidate setti
 
 The main control is a floating continuous timeline. The scene starts at 1 April, advances one data-day in about 900 ms and loops after 30 April. Geometry, scalar colours, station links and tooltip values are linearly interpolated between consecutive daily records; the time label includes hours and minutes so estimated in-between states cannot be mistaken for new observations. A small collapsible floating settings panel exposes automatic playback, enabled by default.
 
-The camera can rotate through a full 360 degrees around the Y axis, zoom with the mouse wheel, and change pitch between 5 and 88 degrees. The initial view is 30 degrees so the upper surface, zero plane and lower surface can all be read together. Screen-space depth fog uses fragment depth to blend distant geometry toward the background, strengthening depth without encoding another measurement.
+The camera can rotate through a full 360 degrees around the Y axis, zoom with the mouse wheel, and change pitch between -60 and +60 degrees. The initial view is 28 degrees so the upper rainfall surface, middle grid and lower temperature surface can all be read together. Screen-space depth fog uses fragment depth to blend distant geometry toward the background, strengthening depth without encoding another measurement.
 
 Moving the pointer over the flat map identifies the nearest station in the X–Z plane. Text follows the pointer and shows station name, date, mean temperature and rainfall or `Trace (<0.05 mm)`. The station's upper endpoint, lower endpoint and connecting line highlight together. Elevation is removed from this text because the revised work does not visualise geographic height.
 
@@ -45,8 +45,8 @@ The surfaces estimate conditions between a limited number of stations. They do n
 ## Acceptance criteria
 
 - The base is flat and clearly separates land from sea.
-- Temperature stays above `Y = 0`; rainfall stays at or below it.
+- Rainfall stays at or above `Y = 0`; temperature stays at or below it.
 - Both surfaces hit every station's value for every date.
 - All dates use fixed height and colour scales.
 - The upper surface, base map and lower surface remain legible in the 24 April still.
-- Autoplay toggle, continuous timeline, 360-degree rotation, 5–88 degree pitch and nearest-station highlight all remain available.
+- Autoplay toggle, continuous timeline, 360-degree rotation, -60–60 degree pitch and nearest-station highlight all remain available.

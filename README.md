@@ -1,14 +1,14 @@
 # Hong Kong Weather Surfaces
 
-![Hong Kong weather shown as an upper temperature surface and lower rainfall surface](out/hong-kong-weather-april.png)
+![Hong Kong weather shown as an upper rainfall surface and lower temperature surface](out/hong-kong-weather-april.png)
 
 ## The phenomenon
 
 Hong Kong is geographically small, but its daily weather is not uniform. This project shows how mean temperature and total rainfall varied across 21 observation stations during April 2026.
 
-The flat Hong Kong land-and-sea map is the zero plane. Temperature forms a continuous surface above it: warmer observations rise higher and change from purple through orange to yellow. Rainfall forms a second surface below it: larger totals extend farther down and become darker blue. White links show where each measured station constrains the two estimated surfaces.
+Hong Kong sits on a fading two-scale reference grid at `Y=0`; major and minor lines become transparent away from the centre. Rainfall forms a continuous surface above it: larger totals rise higher and become darker blue. Temperature forms a second surface below it and changes from purple through orange to yellow. White links show where each measured station constrains the two estimated surfaces.
 
-The scene advances smoothly through all 30 days, linearly interpolating the already spatially interpolated fields between consecutive daily records. A floating draggable timeline accepts continuous positions. A collapsible settings panel contains an automatic-playback checkbox; when selected, the timeline moves automatically. The camera supports 360-degree rotation, zoom, and a widened 5–88 degree pitch. Moving the pointer over the map shows the nearest station's interpolated date/time, mean temperature and total rainfall, while highlighting both measured endpoints.
+The scene advances smoothly through all 30 days, linearly interpolating the already spatially interpolated fields between consecutive daily records. A floating draggable timeline accepts continuous positions. A collapsible settings panel contains an automatic-playback checkbox; when selected, the timeline moves automatically. The camera supports 360-degree rotation, zoom, and pitch from -60° below the grid to +60° above it. Moving the pointer over the map shows the nearest station's interpolated date/time, mean temperature and total rainfall, while highlighting both measured endpoints.
 
 ## Data and method
 

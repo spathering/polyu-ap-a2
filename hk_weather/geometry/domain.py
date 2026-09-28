@@ -173,10 +173,10 @@ def prepare_geometry(weather, terrain, districts, territory, projection):
             rainfall_to_y(rainfall_fields, horizontal_span), dtype=np.float32
         ),
     )
-    if not np.all(frames.temperature_y > 0.0):
-        raise RuntimeError("temperature surface must stay above Y=0")
-    if not np.all(frames.rainfall_y <= 1e-7):
-        raise RuntimeError("rainfall surface must stay at or below Y=0")
+    if not np.all(frames.temperature_y <= 1e-7):
+        raise RuntimeError("temperature surface must stay at or below Y=0")
+    if not np.all(frames.rainfall_y >= -1e-7):
+        raise RuntimeError("rainfall surface must stay at or above Y=0")
     if not np.allclose(
         frames.temperature_c[:, station_node_ids], weather.temperatures_c, atol=1e-5
     ) or not np.allclose(

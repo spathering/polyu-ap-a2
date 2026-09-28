@@ -37,8 +37,8 @@ class TimelinePlayer:
         self.last_tick = now
         if self.dragging or not self.autoplay or now < self.resume_at or elapsed == 0.0:
             return
-        if elapsed > AUTOPLAY_INTERVAL_S:
-            return
+        # A long render frame must not silently stall playback.
+        elapsed = min(elapsed, 0.25)
         self.play_position += elapsed / AUTOPLAY_INTERVAL_S
         count = len(self.controller.weather.dates)
         if self.play_position >= count:

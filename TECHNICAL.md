@@ -2,7 +2,7 @@
 
 ## Target architecture
 
-The application is a Python, NumPy, PyVista and VTK project. Its old elevation mesh, temperature drape and rainfall columns have been replaced by a flat land/sea base and two interpolated field surfaces. Existing weather acquisition, auditing and the 630-row tidy dataset remain valid.
+The application is a Python, NumPy, PyVista and VTK project. Its old elevation mesh, temperature drape and rainfall columns have been replaced by a flat land layer, fading reference grid and two interpolated field surfaces. Existing weather acquisition, auditing and the 630-row tidy dataset remain valid.
 
 The scene is Y-up:
 
@@ -12,7 +12,7 @@ Z = projected northing
 Y = visual data height
 ```
 
-The base map is fixed at `Y = 0`. Temperature maps to positive Y and rainfall maps to negative Y. PyProj supplies the shared metric projection. Shapely handles the Hong Kong mask and district geometry. Pillow reads the cached Terrarium tiles only to derive a binary land/sea mask; terrain elevation is never rendered. PyVista/VTK provides the shared triangulation, meshes, transparency, camera, picking, timeline, timer and screenshot.
+The reference grid is fixed at `Y = 0`. Rainfall maps to positive Y and temperature maps to negative Y. PyProj supplies the shared metric projection. Shapely handles the Hong Kong mask and district geometry. Pillow reads the cached Terrarium tiles only to derive a binary land/sea mask; terrain elevation is never rendered. PyVista/VTK provides the shared triangulation, meshes, transparency, camera, picking, timeline, timer and screenshot.
 
 The planned `plot.py` dependency block remains:
 
@@ -87,9 +87,9 @@ Each station owns a three-point vertical link:
 (X, temperature_y, Z) -> (X, 0, Z) -> (X, rainfall_y, Z)
 ```
 
-The upper and lower endpoints show where the actual observations constrain each surface. Hover picking targets only the zero-plane base. The picked point is compared with station X–Z positions, and one reusable highlight updates the link and both endpoints.
+The upper and lower endpoints show where the actual observations constrain each surface. Hover picking targets land plus an invisible zero-plane water mesh. The picked point is compared with station X–Z positions, and one reusable highlight updates the link and both endpoints.
 
-The slider and timer both call the same frame controller with floating positions. A collapsible settings panel controls whether automatic playback advances. Camera maths uses `view_up = (0, 1, 0)`: pitch is clamped to 5–88 degrees while azimuth remains unrestricted. No module may assume that Z is vertical.
+The slider and timer both call the same frame controller with floating positions. A collapsible settings panel controls whether automatic playback advances; timer deltas are capped instead of discarded so a slow frame cannot stall playback. Camera maths uses `view_up = (0, 1, 0)`: pitch is clamped to -60–60 degrees while azimuth remains unrestricted. No module may assume that Z is vertical.
 
 ## Reuse and replacement
 
@@ -128,7 +128,7 @@ site/                    ignored build output
 
 The payload uses one shared X–Z topology, Float32 arrays for 30 temperature and rainfall frames, and JSON metadata for dates, stations, colours, scales and camera rules. `manifest.json` records schema version, shapes, byte order, file size and SHA-256. `build_site.py` writes ignored staging files to `web/public/data/`; Vite copies them into `site/data/`, so generated binary data is not committed and is not erased by the frontend build. This prevents the desktop and website from silently diverging. The initial target is a complete Pages artifact below 20 MB and first-load data below 10 MB, comfortably inside the documented [GitHub Pages limits](https://docs.github.com/en/enterprise-cloud@latest/pages/getting-started-with-github-pages/github-pages-limits).
 
-The web viewer reproduces the continuous timeline, collapsible autoplay setting, Y-up camera, 360-degree azimuth, 5–88 degree pitch, zero-plane picking, nearest-station text, linked endpoint highlight, value-dependent alpha and screen-depth fog. It uses local bundled dependencies rather than a CDN. Vite is configured with `base: "./"`, and every data request is relative, because a project site is served below `/polyu-ap-a2/` rather than the account root.
+The web viewer reproduces the continuous timeline, collapsible autoplay setting, Y-up camera, 360-degree azimuth, -60–60 degree pitch, invisible zero-plane picking, nearest-station text, linked endpoint highlight, value-dependent alpha, a radial-fading major/minor grid and screen-depth fog. It uses local bundled dependencies rather than a CDN. Vite is configured with `base: "./"`, and every data request is relative, because a project site is served below `/polyu-ap-a2/` rather than the account root.
 
 ## Pages workflow
 
@@ -158,10 +158,10 @@ uv run validate_site.py
 uv run python -m http.server 8000 --directory site
 ```
 
-Validation checks the schema and checksums, 30 dates, 21 stations, topology size, exact station values, Y signs, artifact size, relative asset paths and absence of CDN dependencies or local absolute paths. Manual browser review covers Chrome, Edge and Firefox, the `/polyu-ap-a2/` project path, autoplay, timeline dragging, picking, camera limits, resize and touch fallback. The deployed Pages URL will be added to README only after the workflow succeeds.
+Validation checks the schema and checksums, 30 dates, 21 stations, topology size, exact station values, swapped Y signs, grid metadata, artifact size, relative asset paths and absence of CDN dependencies or local absolute paths. Manual browser review covers Chrome, Edge and Firefox, the `/polyu-ap-a2/` project path, autoplay, timeline dragging, picking, camera limits, resize and touch fallback. The deployed Pages URL will be added to README only after the workflow succeeds.
 
 ## Verification
 
-Automated checks will verify 30 dates, 21 stations and 630 unique rows; a completely flat base; positive temperature Y; non-positive rainfall Y; exact station hits; finite, non-negative interpolation weights; no negative rain; identical surface topology; fixed scales; equivalent timer and slider state; Y-up camera clamping; and successful off-screen output.
+Automated checks verify 30 dates, 21 stations and 630 unique rows; a flat fading grid; non-positive temperature Y; non-negative rainfall Y; exact station hits; finite, non-negative interpolation weights; no negative rain; identical surface topology; fixed scales; equivalent timer and slider state; Y-up camera clamping; and successful off-screen output.
 
-Manual review checks that all three layers remain readable, 24 April produces local rainfall depressions rather than columns, baseline areas fade cleanly, the settings panel collapses, autoplay stops and restarts from its checkbox, fractional dates interpolate, hover highlights both station endpoints, depth fog changes with screen depth, and `uv run plot.py` still works without network access. The Pages build must reproduce the same mappings and interactions without a Python server.
+Manual review checks that all three layers remain readable, 24 April produces local rainfall peaks rather than columns, baseline areas fade cleanly, the settings panel collapses, autoplay stops and restarts from its checkbox, fractional dates interpolate, hover highlights both station endpoints, depth fog changes with screen depth, and `uv run plot.py` still works without network access. The Pages build must reproduce the same mappings and interactions without a Python server.
