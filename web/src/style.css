@@ -11,7 +11,7 @@ body { background: radial-gradient(circle at 50% 20%, #183840, #07151b 70%); }
 #viewer { position: absolute; inset: 0; touch-action: none; }
 #viewer canvas { display: block; width: 100%; height: 100%; }
 
-.title-block, .date-label, .legend, .timeline-shell, footer, .loading, .error, .tooltip {
+.title-block, .date-label, .settings-panel, .legend, .timeline-shell, footer, .loading, .error, .tooltip {
   position: absolute;
   z-index: 2;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
@@ -22,13 +22,21 @@ h1 { margin: 0; font-size: clamp(20px, 2.1vw, 34px); letter-spacing: 0.08em; tex
 .title-block p { margin: 5px 0 0; color: #b9ced2; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
 .date-label { top: 28px; right: 30px; font-size: 17px; font-weight: 700; letter-spacing: 0.08em; }
 
+.settings-panel { top: 66px; right: 28px; width: 220px; border: 1px solid rgba(220, 241, 244, 0.22); border-radius: 10px; background: rgba(4, 18, 24, 0.78); backdrop-filter: blur(8px); }
+.settings-panel summary { padding: 9px 12px; color: #dcecef; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; user-select: none; }
+.settings-panel summary::marker { color: #9bc8d2; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 7px 12px 11px; border-top: 1px solid rgba(220, 241, 244, 0.12); color: #b9ced2; font-size: 11px; }
+.setting-row input { width: 17px; height: 17px; accent-color: #ffe36b; cursor: pointer; }
+
 .legend { right: 28px; width: 190px; padding: 10px 12px; border: 1px solid rgba(220, 241, 244, 0.22); border-radius: 10px; background: rgba(4, 18, 24, 0.72); backdrop-filter: blur(7px); pointer-events: none; }
-.legend-temperature { top: 96px; }
-.legend-rainfall { top: 190px; }
+.legend-temperature { top: 120px; }
+.legend-rainfall { top: 214px; }
+.settings-panel[open] ~ .legend-temperature { top: 154px; }
+.settings-panel[open] ~ .legend-rainfall { top: 248px; }
 .legend > span { display: block; margin-bottom: 7px; color: #dcecef; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .gradient { height: 8px; border-radius: 999px; }
-.temperature-gradient { background: linear-gradient(90deg, #31457a, #4f96b7, #e6c66a, #c95845); }
-.rainfall-gradient { background: linear-gradient(90deg, #bfe8f2, #3b9bc2, #164a7b); }
+.temperature-gradient { background: linear-gradient(90deg, rgba(73, 58, 134, 0.02), #a5538f, #e07a4f, #f4d35e); }
+.rainfall-gradient { background: linear-gradient(90deg, rgba(191, 232, 242, 0.02), #3b9bc2, #164a7b); }
 .ticks { display: flex; justify-content: space-between; margin-top: 5px; color: #b9ced2; font-size: 10px; }
 
 .timeline-shell { left: 50%; bottom: 48px; width: min(680px, calc(100% - 48px)); padding: 13px 18px 10px; transform: translateX(-50%); border: 1px solid rgba(220, 241, 244, 0.24); border-radius: 15px; background: rgba(4, 18, 24, 0.78); box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28); backdrop-filter: blur(9px); }
@@ -45,8 +53,11 @@ footer { left: 28px; bottom: 18px; color: #9db4b9; font-size: 10px; letter-spaci
 @media (max-width: 720px) {
   .date-label { top: 76px; left: 28px; right: auto; }
   .legend { right: 14px; width: 145px; }
-  .legend-temperature { top: 18px; }
-  .legend-rainfall { top: 105px; }
+  .settings-panel { top: 18px; right: 14px; width: 145px; }
+  .legend-temperature { top: 70px; }
+  .legend-rainfall { top: 164px; }
+  .settings-panel[open] ~ .legend-temperature { top: 108px; }
+  .settings-panel[open] ~ .legend-rainfall { top: 202px; }
   .title-block { left: 18px; top: 18px; max-width: calc(100% - 175px); }
   .title-block p { display: none; }
   .timeline-shell { bottom: 35px; width: calc(100% - 28px); }

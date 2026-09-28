@@ -16,14 +16,17 @@ const slider = document.querySelector('#timeline');
 const dateLabel = document.querySelector('#date-label');
 const timelineDate = document.querySelector('#timeline-date');
 const tooltip = document.querySelector('#tooltip');
+const autoplayToggle = document.querySelector('#autoplay');
 const loading = document.querySelector('#loading');
 const errorBox = document.querySelector('#error');
 
 const state = {
-  day: 0,
+  position: 0,
+  playPosition: 0,
   selectedStation: null,
-  autoplayTimer: null,
-  resumeTimer: null,
+  autoplay: true,
+  scrubbing: false,
+  lastAnimationAt: null,
   lastPickAt: 0,
 };
 
@@ -32,9 +35,9 @@ function hexToRgb(hex) {
   return [0, 2, 4].map((index) => parseInt(value.slice(index, index + 2), 16) / 255);
 }
 
-function colourBytes(values, range, palette) {
+function colourBytes(values, range, palette, baseline, fadeWidth, maxOpacity) {
   const colours = palette.map((value) => hexToRgb(value).map((item) => item * 255));
-  const output = new Uint8Array(values.length * 3);
+  const output = new Uint8Array(values.length * 4);
   const span = range[1] - range[0];
   for (let index = 0; index < values.length; index += 1) {
     const normalised = Math.max(0, Math.min(1, (values[index] - range[0]) / span));
@@ -42,12 +45,35 @@ function colourBytes(values, range, palette) {
     const low = Math.min(Math.floor(position), colours.length - 2);
     const fraction = position - low;
     for (let channel = 0; channel < 3; channel += 1) {
-      output[index * 3 + channel] = Math.round(
+      output[index * 4 + channel] = Math.round(
         colours[low][channel] * (1 - fraction) + colours[low + 1][channel] * fraction,
       );
     }
+    const distance = Math.max(0, Math.min(1, Math.abs(values[index] - baseline) / fadeWidth));
+    const smooth = distance * distance * (3 - 2 * distance);
+    output[index * 4 + 3] = Math.round(255 * maxOpacity * smooth);
   }
   return output;
+}
+
+function applyDepthFog(mapper, fog) {
+  const colour = hexToRgb(fog.colour);
+  mapper.setViewSpecificProperties({
+    OpenGL: {
+      ShaderReplacements: [{
+        shaderType: 'Fragment',
+        originalValue: '//VTK::RenderPassFragmentShader::Impl',
+        replacementValue: `
+          float weatherFog = smoothstep(${fog.start}, ${fog.end}, gl_FragCoord.z);
+          weatherFog = clamp(weatherFog * ${fog.strength}, 0.0, 1.0);
+          gl_FragData[0].rgb = mix(gl_FragData[0].rgb, vec3(${colour.join(',')}), weatherFog);
+          //VTK::RenderPassFragmentShader::Impl
+        `,
+        replaceFirst: false,
+        replaceAll: false,
+      }],
+    },
+  });
 }
 
 function vtkTriangles(faces) {
@@ -70,7 +96,7 @@ function vtkVertices(count) {
   return output;
 }
 
-function createSurface(nodes, faces, y, values, range, palette, opacity) {
+function createSurface(nodes, faces, y, values, settings, opacity) {
   const coordinates = new Float32Array((nodes.length / 2) * 3);
   for (let index = 0; index < nodes.length / 2; index += 1) {
     coordinates[index * 3] = nodes[index * 2];
@@ -85,8 +111,11 @@ function createSurface(nodes, faces, y, values, range, palette, opacity) {
 
   const colours = vtkDataArray.newInstance({
     name: 'Colours',
-    numberOfComponents: 3,
-    values: colourBytes(values, range, palette),
+    numberOfComponents: 4,
+    values: colourBytes(
+      values, settings.range, settings.colours,
+      settings.baseline, settings.fadeWidth, opacity,
+    ),
   });
   polyData.getPointData().setScalars(colours);
   const mapper = vtkMapper.newInstance();
@@ -96,7 +125,7 @@ function createSurface(nodes, faces, y, values, range, palette, opacity) {
   mapper.setScalarVisibility(true);
   const actor = vtkActor.newInstance();
   actor.setMapper(mapper);
-  actor.getProperty().setOpacity(opacity);
+  actor.getProperty().setOpacity(1);
   actor.getProperty().setAmbient(0.32);
   actor.getProperty().setDiffuse(0.72);
   actor.getProperty().setSpecular(0.1);
@@ -251,12 +280,6 @@ async function loadBuffer(path) {
   return response.arrayBuffer();
 }
 
-function formatDate(iso) {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC',
-  }).format(new Date(`${iso}T00:00:00Z`)).toUpperCase();
-}
-
 function clampCamera(camera, pitchRange) {
   const position = camera.getPosition();
   const focal = camera.getFocalPoint();
@@ -315,13 +338,13 @@ async function start() {
 
   const temp = createSurface(
     nodes, faces, temperatureY.subarray(0, nodeCount),
-    temperatureValues.subarray(0, nodeCount), manifest.temperature.range,
-    manifest.temperature.colours, manifest.surfaceOpacity.temperature,
+    temperatureValues.subarray(0, nodeCount), manifest.temperature,
+    manifest.surfaceOpacity.temperature,
   );
   const rain = createSurface(
     nodes, faces, rainfallY.subarray(0, nodeCount),
-    rainfallValues.subarray(0, nodeCount), manifest.rainfall.range,
-    manifest.rainfall.colours, manifest.surfaceOpacity.rainfall,
+    rainfallValues.subarray(0, nodeCount), manifest.rainfall,
+    manifest.surfaceOpacity.rainfall,
   );
   const land = createSolidMesh(nodes, faces, 0, manifest.base.landColour, manifest.base.landOpacity);
   const seaNodes = Float32Array.from(manifest.seaCorners.flat());
@@ -329,6 +352,12 @@ async function start() {
   const sea = createSolidMesh(seaNodes, seaFaces, 0, manifest.base.seaColour, manifest.base.seaOpacity);
   const districts = createLines(districtLines, '#5e7479');
   const stationActors = createStationActors(stations);
+
+  [
+    temp.actor, rain.actor, land.actor, sea.actor, districts.actor,
+    stationActors.linkActor, stationActors.endpointActor,
+    stationActors.highlightActor, stationActors.highlightEndpointActor,
+  ].forEach((actor) => applyDepthFog(actor.getMapper(), manifest.depthFog));
 
   renderer.addActor(sea.actor);
   renderer.addActor(rain.actor);
@@ -340,11 +369,33 @@ async function start() {
   renderer.addActor(stationActors.highlightActor);
   renderer.addActor(stationActors.highlightEndpointActor);
 
-  function updateStations(day) {
+  function frameBlend(position) {
+    const lower = Math.floor(position);
+    const upper = Math.min(lower + 1, manifest.dates.length - 1);
+    return { lower, upper, fraction: position - lower };
+  }
+
+  function blendedValue(values, node, blend) {
+    const first = values[blend.lower * nodeCount + node];
+    const second = values[blend.upper * nodeCount + node];
+    return first * (1 - blend.fraction) + second * blend.fraction;
+  }
+
+  function formatPosition(position) {
+    const moment = new Date(`${manifest.dates[0]}T00:00:00Z`);
+    moment.setTime(moment.getTime() + position * 86400000);
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
+    }).format(moment).replace(',', ' ·').toUpperCase();
+  }
+
+  function updateStations(position) {
+    const blend = frameBlend(position);
     stations.forEach((station, index) => {
       const base = index * 9;
-      const upperY = temperatureY[day * nodeCount + station.node];
-      const lowerY = rainfallY[day * nodeCount + station.node];
+      const upperY = blendedValue(temperatureY, station.node, blend);
+      const lowerY = blendedValue(rainfallY, station.node, blend);
       stationActors.linkCoordinates.set(
         [station.x, upperY, station.z, station.x, 0, station.z, station.x, lowerY, station.z],
         base,
@@ -386,40 +437,49 @@ async function start() {
     stationActors.highlightEndpointActor.setVisibility(true);
   }
 
-  function updateSurface(surface, yValues, sourceValues, range, palette, day) {
-    const offset = day * nodeCount;
-    const y = yValues.subarray(offset, offset + nodeCount);
-    const values = sourceValues.subarray(offset, offset + nodeCount);
+  function updateSurface(surface, yValues, sourceValues, settings, opacity, position) {
+    const blend = frameBlend(position);
+    const values = new Float32Array(nodeCount);
     for (let index = 0; index < nodeCount; index += 1) {
-      surface.coordinates[index * 3 + 1] = y[index];
+      surface.coordinates[index * 3 + 1] = blendedValue(yValues, index, blend);
+      values[index] = blendedValue(sourceValues, index, blend);
     }
     surface.points.setData(surface.coordinates, 3);
     surface.points.modified();
-    surface.colours.setData(colourBytes(values, range, palette), 3);
+    surface.colours.setData(colourBytes(
+      values, settings.range, settings.colours,
+      settings.baseline, settings.fadeWidth, opacity,
+    ), 4);
     surface.colours.modified();
     surface.polyData.modified();
   }
 
   function tooltipHtml(index) {
     const station = stations[index];
-    const rain = station.trace[state.day]
+    const blend = frameBlend(state.position);
+    const temperature = station.temperature[blend.lower] * (1 - blend.fraction)
+      + station.temperature[blend.upper] * blend.fraction;
+    const rainfall = station.rainfall[blend.lower] * (1 - blend.fraction)
+      + station.rainfall[blend.upper] * blend.fraction;
+    const isExactTrace = blend.fraction < 1e-6 && station.trace[blend.lower];
+    const rain = isExactTrace
       ? 'Trace (&lt;0.05 mm)'
-      : `${station.rainfall[state.day].toFixed(1)} mm`;
-    return `<strong>${station.name} (${station.code})</strong><br>${formatDate(manifest.dates[state.day])}`
-      + `<br>Mean temperature&nbsp; ${station.temperature[state.day].toFixed(1)} °C`
+      : `${rainfall.toFixed(1)} mm`;
+    return `<strong>${station.name} (${station.code})</strong><br>${formatPosition(state.position)}`
+      + `<br>Mean temperature&nbsp; ${temperature.toFixed(1)} °C`
       + `<br>Total rainfall&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${rain}`;
   }
 
-  function applyDay(day) {
-    state.day = (Number(day) + manifest.dates.length) % manifest.dates.length;
-    updateSurface(temp, temperatureY, temperatureValues, manifest.temperature.range,
-      manifest.temperature.colours, state.day);
-    updateSurface(rain, rainfallY, rainfallValues, manifest.rainfall.range,
-      manifest.rainfall.colours, state.day);
-    updateStations(state.day);
+  function applyPosition(position) {
+    state.position = Math.max(0, Math.min(manifest.dates.length - 1, Number(position)));
+    updateSurface(temp, temperatureY, temperatureValues, manifest.temperature,
+      manifest.surfaceOpacity.temperature, state.position);
+    updateSurface(rain, rainfallY, rainfallValues, manifest.rainfall,
+      manifest.surfaceOpacity.rainfall, state.position);
+    updateStations(state.position);
     updateHighlight();
-    slider.value = String(state.day);
-    const label = formatDate(manifest.dates[state.day]);
+    slider.value = String(state.position);
+    const label = formatPosition(state.position);
     dateLabel.textContent = label;
     timelineDate.textContent = label;
     if (state.selectedStation !== null) tooltip.innerHTML = tooltipHtml(state.selectedStation);
@@ -427,28 +487,20 @@ async function start() {
     renderWindow.render();
   }
 
-  function stopAutoplay() {
-    if (state.autoplayTimer) clearInterval(state.autoplayTimer);
-    state.autoplayTimer = null;
-    if (state.resumeTimer) clearTimeout(state.resumeTimer);
-    state.resumeTimer = null;
-  }
-
-  function startAutoplay() {
-    stopAutoplay();
-    state.autoplayTimer = setInterval(
-      () => applyDay((state.day + 1) % manifest.dates.length),
-      manifest.timeline.intervalMs,
-    );
-  }
-
   slider.max = String(manifest.dates.length - 1);
   slider.addEventListener('input', (event) => {
-    stopAutoplay();
-    applyDay(Number(event.target.value));
+    state.playPosition = Number(event.target.value);
+    applyPosition(state.playPosition);
   });
-  slider.addEventListener('change', () => {
-    state.resumeTimer = setTimeout(startAutoplay, manifest.timeline.resumeDelayMs);
+  slider.addEventListener('pointerdown', () => { state.scrubbing = true; });
+  slider.addEventListener('pointerup', () => {
+    state.scrubbing = false;
+    state.lastAnimationAt = performance.now();
+  });
+  slider.addEventListener('change', () => { state.scrubbing = false; });
+  autoplayToggle.addEventListener('change', () => {
+    state.autoplay = autoplayToggle.checked;
+    state.lastAnimationAt = performance.now();
   });
 
   const camera = renderer.getActiveCamera();
@@ -530,8 +582,22 @@ async function start() {
     renderWindow.render();
   });
 
-  applyDay(0);
-  startAutoplay();
+  function animate(timestamp) {
+    if (state.lastAnimationAt === null) state.lastAnimationAt = timestamp;
+    const elapsed = Math.min(timestamp - state.lastAnimationAt, manifest.timeline.intervalMs);
+    state.lastAnimationAt = timestamp;
+    if (state.autoplay && !state.scrubbing) {
+      state.playPosition += elapsed / manifest.timeline.intervalMs;
+      if (state.playPosition >= manifest.dates.length) {
+        state.playPosition %= manifest.dates.length;
+      }
+      applyPosition(Math.min(state.playPosition, manifest.dates.length - 1));
+    }
+    requestAnimationFrame(animate);
+  }
+
+  applyPosition(0);
+  requestAnimationFrame(animate);
   loading.hidden = true;
   app.setAttribute('aria-busy', 'false');
 }

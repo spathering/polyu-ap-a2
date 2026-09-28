@@ -10,11 +10,18 @@ class TimelinePlayer:
         self.controller = controller
         self.widget = None
         self.dragging = False
+        self.autoplay = True
+        self.play_position = 0.0
         self.resume_at = 0.0
-        self.last_advance = time.monotonic()
+        self.last_tick = time.monotonic()
 
     def slider_changed(self, value):
-        self.controller.apply(round(value))
+        self.play_position = float(value)
+        self.controller.apply(self.play_position)
+
+    def set_autoplay(self, enabled):
+        self.autoplay = bool(enabled)
+        self.last_tick = time.monotonic()
 
     def drag_started(self, _widget, _event):
         self.dragging = True
@@ -22,18 +29,23 @@ class TimelinePlayer:
     def drag_ended(self, _widget, _event):
         self.dragging = False
         self.resume_at = time.monotonic() + AUTOPLAY_RESUME_DELAY_S
-        self.last_advance = time.monotonic()
+        self.last_tick = time.monotonic()
 
     def on_timer(self, _step):
         now = time.monotonic()
-        if self.dragging or now < self.resume_at:
+        elapsed = max(0.0, now - self.last_tick)
+        self.last_tick = now
+        if self.dragging or not self.autoplay or now < self.resume_at or elapsed == 0.0:
             return
-        if now - self.last_advance < AUTOPLAY_INTERVAL_S:
+        if elapsed > AUTOPLAY_INTERVAL_S:
             return
-        next_day = (self.controller.day_index + 1) % len(self.controller.weather.dates)
-        self.controller.apply(next_day)
-        self.widget.GetRepresentation().SetValue(next_day)
-        self.last_advance = now
+        self.play_position += elapsed / AUTOPLAY_INTERVAL_S
+        count = len(self.controller.weather.dates)
+        if self.play_position >= count:
+            self.play_position %= count
+        visible_position = min(self.play_position, count - 1)
+        self.controller.apply(visible_position)
+        self.widget.GetRepresentation().SetValue(visible_position)
 
 
 def add_timeline(plotter, controller, interactive=True):
@@ -51,7 +63,7 @@ def add_timeline(plotter, controller, interactive=True):
         tube_width=0.006,
         slider_width=0.018,
         title_height=0.018,
-        fmt="%0.0f",
+        fmt="%0.2f",
     )
     player.widget = widget
     representation = widget.GetRepresentation()

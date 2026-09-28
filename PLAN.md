@@ -4,6 +4,8 @@ This plan replaced the elevation-and-columns renderer without changing the valid
 
 **Implementation status (24 September 2026):** stages 1–10 are complete locally. The Python screenshot and interaction, tuned dual surfaces, static payload, VTK.js viewer, production build, artifact validation and Pages workflow have all been tested. Remote publication is the only repository-owner step remaining: enable **Settings → Pages → GitHub Actions**, commit this work and push it to `main`.
 
+**Interaction/rendering amendment (28 September 2026):** the timeline is now continuous between daily records; autoplay is controlled by a collapsible settings panel; temperature and rainfall start at the common `Y=0` baseline and fade near 14 °C/0 mm; pitch expands to 5–88°; and both renderers apply fragment-depth fog. These changes are verified in the Python scene and a real Edge WebGL session.
+
 ## 1. Preserve the baseline
 
 - Keep the existing renderer and image recoverable in Git history.
@@ -61,7 +63,7 @@ Gate: the scene changes date without rebuilding topology or adding actors, and u
 - Pick only the base map, find the nearest station in X–Z and highlight both surface endpoints.
 - Remove elevation from hover text.
 
-Gate: autoplay, dragging, 360-degree rotation, 20–80 degree pitch and nearest-station feedback all work together.
+Gate: autoplay setting, continuous dragging, 360-degree rotation, 5–88 degree pitch and nearest-station feedback all work together.
 
 ## 8. Export a static web payload
 

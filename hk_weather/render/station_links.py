@@ -4,6 +4,7 @@ import numpy as np
 import pyvista as pv
 
 from hk_weather.core.config import HIGHLIGHT_COLOUR, STATION_COLOUR
+from hk_weather.render.fog import add_depth_fog
 
 
 def station_link_points(station_xz, temperature_y, rainfall_y):
@@ -81,6 +82,13 @@ def add_station_links(plotter, domain, frames):
         show_scalar_bar=False,
     )
     highlight_points_actor.visibility = False
+    for actor in (
+        link_actor,
+        endpoint_actor,
+        highlight_actor,
+        highlight_points_actor,
+    ):
+        add_depth_fog(actor)
     return (
         link_mesh,
         link_actor,

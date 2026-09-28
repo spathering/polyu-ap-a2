@@ -36,6 +36,8 @@ The first dual-surface draft used overlapping blue palettes. Visual review showe
 
 The final 24 April screenshot comes from the same Python scene used by the desktop interaction. The web payload records schema version, array shapes, byte order, file sizes and SHA-256 hashes. Generated staging data and `site/` are ignored; the workflow recreates and validates them rather than committing build output.
 
+The later interaction pass widened camera pitch from 20–80° to 5–88° and changed the timeline from 30 hard steps to a continuous position. Spatial IDW remains precomputed only on the 30 real days; runtime code linearly blends adjacent prepared fields and labels intermediate states with an explicit time. I added a collapsible settings panel instead of another permanently visible control, and its checked automatic-playback option is now the sole source of playback state. The old positive temperature gap was removed: 14 °C and 0 mm both map to `Y=0`, smooth alpha ramps suppress values close to those baselines, and a fragment-depth shader supplies screen-space fog in both renderers.
+
 ## Verification status
 
 - Weather audit: 30 dates, 21 stations, 630 unique complete rows.
@@ -43,5 +45,5 @@ The final 24 April screenshot comes from the same Python scene used by the deskt
 - Desktop: off-screen PNG generation succeeds with 18,088 shared nodes.
 - Static export: the complete Pages artifact validates at 9.6 MB.
 - Frontend: Vite production build transforms 351 modules successfully.
-- Browser: Edge loaded the served build with one WebGL canvas, autoplay advanced dates, dragging selected 24 April, and hover picking displayed and highlighted the nearest station without runtime errors.
+- Browser: Edge loaded the served build with one WebGL canvas and no runtime errors. The settings panel opened without covering the legends; disabling autoplay held the slider exactly still; re-enabling it resumed continuous movement; position 3.5 displayed `04 APR 2026 · 12:00`; and hover picking showed interpolated station values with linked highlighting.
 - Deployment: `.github/workflows/pages.yml` is ready; publishing still requires the repository's one-time Pages source setting and a push to `main`.

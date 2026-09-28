@@ -10,6 +10,7 @@ from hk_weather.core.config import (
     SEA_COLOUR,
     SEA_OPACITY,
 )
+from hk_weather.render.fog import add_depth_fog
 
 
 def vtk_faces(faces):
@@ -78,4 +79,6 @@ def add_base_map(plotter, domain):
         pickable=False,
         show_scalar_bar=False,
     )
+    for actor in (sea_actor, land_actor, district_actor):
+        add_depth_fog(actor)
     return sea_mesh, sea_actor, land_mesh, land_actor, district_mesh, district_actor

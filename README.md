@@ -8,7 +8,7 @@ Hong Kong is geographically small, but its daily weather is not uniform. This pr
 
 The flat Hong Kong land-and-sea map is the zero plane. Temperature forms a continuous surface above it: warmer observations rise higher and change from purple through orange to yellow. Rainfall forms a second surface below it: larger totals extend farther down and become darker blue. White links show where each measured station constrains the two estimated surfaces.
 
-The scene advances through all 30 days automatically. Its only visible control is a floating draggable timeline. The camera supports 360-degree rotation, zoom, and a pitch restricted to 20–80 degrees. Moving the pointer over the map shows the nearest station's date, mean temperature and total rainfall, while highlighting both measured endpoints.
+The scene advances smoothly through all 30 days, linearly interpolating the already spatially interpolated fields between consecutive daily records. A floating draggable timeline accepts continuous positions. A collapsible settings panel contains an automatic-playback checkbox; when selected, the timeline moves automatically. The camera supports 360-degree rotation, zoom, and a widened 5–88 degree pitch. Moving the pointer over the map shows the nearest station's interpolated date/time, mean temperature and total rainfall, while highlighting both measured endpoints.
 
 ## Data and method
 
@@ -16,7 +16,7 @@ The observations come from the Hong Kong Observatory datasets for [daily tempera
 
 April was selected after auditing every completed month from January to August 2026 across 23 same-site candidates. Shau Kei Wan had two incomplete rainfall records and Wetland Park had one incomplete temperature record, so the final tidy dataset contains 630 complete rows: 21 stations × 30 days. Twelve `Trace` rainfall observations are preserved as trace flags and visualised at 0 mm rather than treated as missing.
 
-Both surfaces share one 18,088-node horizontal topology containing exact station nodes. Temperature uses exact k-nearest inverse-distance weighting (IDW) on Celsius values. Rainfall uses local IDW after a `log1p` transform and is converted back to millimetres. Leave-one-station-out validation selected `power=1.5, k=20` for temperature and `power=2.5, k=8` for rainfall. Fixed month-wide ranges—14–28 °C and 0–67 mm—make dates comparable.
+Both surfaces share one 18,088-node horizontal topology containing exact station nodes. Temperature uses exact k-nearest inverse-distance weighting (IDW) on Celsius values. Rainfall uses local IDW after a `log1p` transform and is converted back to millimetres. Leave-one-station-out validation selected `power=1.5, k=20` for temperature and `power=2.5, k=8` for rainfall. Fixed month-wide ranges—14–28 °C and 0–67 mm—make dates comparable. The corresponding lower bounds are the two baselines: both surfaces originate at `Y=0`, and alpha approaches zero close to 14 °C or 0 mm. A fragment-depth shader blends distant screen-space fragments into the background to add depth fog.
 
 The coloured shapes between stations are estimates, not additional measurements. Daily means hide within-day temperature changes, daily totals hide the timing of rain, and surface height is an explanatory visual scale rather than physical altitude. Areas outside the supported Hong Kong land domain are not extrapolated.
 

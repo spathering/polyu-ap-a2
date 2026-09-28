@@ -45,8 +45,16 @@ def validate_site(site=SITE):
 
     temperature_y = np.fromfile(site / "data" / "temperature-y.f32", dtype="<f4")
     rainfall_y = np.fromfile(site / "data" / "rainfall-y.f32", dtype="<f4")
-    if not np.all(temperature_y > 0.0) or not np.all(rainfall_y <= 1e-7):
+    if not np.all(temperature_y >= -1e-7) or not np.all(rainfall_y <= 1e-7):
         raise RuntimeError("web surface Y signs are invalid")
+    if manifest["temperature"]["baseline"] != 14.0:
+        raise RuntimeError("temperature baseline is not 14 °C")
+    if manifest["rainfall"]["baseline"] != 0.0:
+        raise RuntimeError("rainfall baseline is not 0 mm")
+    if manifest["camera"]["pitchRange"] != [5.0, 88.0]:
+        raise RuntimeError("web camera pitch range is not 5–88 degrees")
+    if not manifest.get("depthFog"):
+        raise RuntimeError("web manifest has no screen-space depth fog settings")
 
     total_bytes = sum(path.stat().st_size for path in site.rglob("*") if path.is_file())
     if total_bytes > WEB_ARTIFACT_TARGET_BYTES:

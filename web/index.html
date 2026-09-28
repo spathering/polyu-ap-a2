@@ -18,23 +18,30 @@
         <p>Temperature above · rainfall below</p>
       </header>
       <div id="date-label" class="date-label">Loading…</div>
+      <details id="settings" class="settings-panel">
+        <summary>Settings</summary>
+        <label class="setting-row" for="autoplay">
+          <span>Automatic playback</span>
+          <input id="autoplay" type="checkbox" checked />
+        </label>
+      </details>
       <aside class="legend legend-temperature" aria-label="Temperature legend">
-        <span>Temperature height</span>
+        <span>Temperature · baseline 14 °C</span>
         <div class="gradient temperature-gradient"></div>
         <div class="ticks"><b>14</b><b>21</b><b>28 °C</b></div>
       </aside>
       <aside class="legend legend-rainfall" aria-label="Rainfall legend">
-        <span>Rainfall depth</span>
+        <span>Rainfall · baseline 0 mm</span>
         <div class="gradient rainfall-gradient"></div>
         <div class="ticks"><b>0</b><b>33.5</b><b>67 mm</b></div>
       </aside>
       <div id="tooltip" class="tooltip" hidden></div>
       <section class="timeline-shell" aria-label="Date control">
-        <input id="timeline" type="range" min="0" max="29" step="1" value="0" />
+        <input id="timeline" type="range" min="0" max="29" step="0.01" value="0" />
         <div class="timeline-labels"><span>APR 01</span><strong id="timeline-date">01 APR 2026</strong><span>APR 30</span></div>
       </section>
       <footer>
-        Flat land/sea base at Y = 0 · surfaces between stations are IDW estimates
+        Baseline plane Y = 0 · daily fields and in-between times are estimates
       </footer>
       <div id="loading" class="loading">Preparing 30 weather frames…</div>
       <div id="error" class="error" hidden></div>

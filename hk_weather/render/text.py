@@ -36,7 +36,7 @@ def add_surface_note(plotter):
     actor = _text_actor(13, 0.55)
     actor.SetInput(
         "TEMPERATURE ABOVE · RAINFALL BELOW\n"
-        "Flat land/sea base at Y = 0 · surfaces between stations are IDW estimates"
+        "Baseline plane Y = 0 · spatial and between-day values are estimates"
     )
     actor.SetDisplayPosition(28, 30)
     plotter.renderer.AddViewProp(actor)

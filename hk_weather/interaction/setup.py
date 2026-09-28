@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from hk_weather.interaction.camera_guard import CameraGuard
 from hk_weather.interaction.cursor_probe import CursorProbe
+from hk_weather.interaction.settings import SettingsPanel
 from hk_weather.interaction.timeline import add_timeline
 
 
@@ -12,11 +13,13 @@ class InteractionHandles:
     timeline: object
     cursor: object
     camera: object
+    settings: object
 
 
 def attach_interactions(controller):
     plotter = controller.handles.plotter
     timeline = add_timeline(plotter, controller, interactive=True)
+    settings = SettingsPanel(plotter, timeline)
     cursor = CursorProbe(controller)
     camera = CameraGuard(plotter)
     plotter.iren.add_observer("MouseMoveEvent", cursor.on_mouse_move)
@@ -26,4 +29,4 @@ def attach_interactions(controller):
         duration=50,
         callback=cursor.pulse,
     )
-    return InteractionHandles(timeline, cursor, camera)
+    return InteractionHandles(timeline, cursor, camera, settings)

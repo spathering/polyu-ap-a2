@@ -14,7 +14,7 @@ The main visual statement is that Hong Kong's temperature forms a broad, slowly 
 
 The scene uses Y as its only height axis. Projected easting becomes X, projected northing becomes Z, and every base-map vertex has `Y = 0`. Station longitude and latitude therefore remain aligned across the base, temperature surface and rainfall surface.
 
-Temperature uses one fixed 14–28 °C scale for the whole month. A small positive gap separates the lowest temperature level from the map, and warmer values rise higher. The upper surface uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
+Temperature uses one fixed 14–28 °C scale for the whole month. Its 14 °C baseline lies exactly on the map plane and warmer values rise higher. Rainfall uses a 0 mm baseline on the same plane and larger totals extend downward. Alpha approaches zero near each baseline, so low-signal regions dissolve into the middle plane instead of forming opaque sheets. The upper surface uses a purple-to-orange-to-yellow colour scale so it remains distinct from blue rainfall.
 
 Rainfall uses one fixed 0–67 mm scale. Zero rain meets the base plane; increasing rain extends farther down. The lower surface uses a pale-cyan-to-deep-blue scale. The two height conversions are linear but independent because °C and mm are different units. Legends always show the original units rather than suggesting that scene height is physical altitude.
 
@@ -30,9 +30,9 @@ The power and neighbour count are not chosen only by appearance. Candidate setti
 
 ## Interaction
 
-The only visible control remains a floating 30-step timeline. The scene starts at 1 April, advances about once per second and loops after 30 April. Dragging changes both surfaces and the date immediately, pauses autoplay, and resumes from the selected date after a short delay. Dates are discrete; the application does not invent measurements between days.
+The main control is a floating continuous timeline. The scene starts at 1 April, advances one data-day in about 900 ms and loops after 30 April. Geometry, scalar colours, station links and tooltip values are linearly interpolated between consecutive daily records; the time label includes hours and minutes so estimated in-between states cannot be mistaken for new observations. A small collapsible floating settings panel exposes automatic playback, enabled by default.
 
-The camera can rotate through a full 360 degrees around the Y axis, zoom with the mouse wheel, and change pitch only between 20 and 80 degrees. The initial view is 30 degrees so the upper surface, zero plane and lower surface can all be read together.
+The camera can rotate through a full 360 degrees around the Y axis, zoom with the mouse wheel, and change pitch between 5 and 88 degrees. The initial view is 30 degrees so the upper surface, zero plane and lower surface can all be read together. Screen-space depth fog uses fragment depth to blend distant geometry toward the background, strengthening depth without encoding another measurement.
 
 Moving the pointer over the flat map identifies the nearest station in the X–Z plane. Text follows the pointer and shows station name, date, mean temperature and rainfall or `Trace (<0.05 mm)`. The station's upper endpoint, lower endpoint and connecting line highlight together. Elevation is removed from this text because the revised work does not visualise geographic height.
 
@@ -49,4 +49,4 @@ The surfaces estimate conditions between a limited number of stations. They do n
 - Both surfaces hit every station's value for every date.
 - All dates use fixed height and colour scales.
 - The upper surface, base map and lower surface remain legible in the 24 April still.
-- Autoplay, the single timeline, 360-degree rotation, 20–80 degree pitch and nearest-station highlight all remain available.
+- Autoplay toggle, continuous timeline, 360-degree rotation, 5–88 degree pitch and nearest-station highlight all remain available.
